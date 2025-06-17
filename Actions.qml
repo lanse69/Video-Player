@@ -8,6 +8,7 @@ Item {
     property alias play: _play
     property alias pause: _pause
     property alias stop: _stop
+    property alias mute: _mute
     property alias previous: _previous
     property alias next: _next
     property alias aboutQt: _aboutQt
@@ -51,6 +52,19 @@ Item {
     }
 
     Action {
+        id: _mute
+        text: qsTr("&Mute")
+        icon.name: "audio-volume-muted"
+        checkable: true
+
+        onTriggered: {
+            if (content.mediaEngine) {
+                content.mediaEngine.setMuted(checked)
+            }
+        }
+    }
+
+    Action {
         id: _previous
         text: qsTr("&Previous")
         icon.name: "media-skip-backward"
@@ -65,6 +79,6 @@ Item {
     Action {
         id: _aboutQt
         text: qsTr("About Qt")
-        icon.name: "qt-logo"
+        icon.name: "qtcreator"
     }
 }

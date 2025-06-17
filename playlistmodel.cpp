@@ -1,5 +1,7 @@
 #include "playlistmodel.h"
 
+#include <QFileInfo>
+
 PlaylistModel::PlaylistModel(QObject *parent) : QAbstractListModel(parent) {}
 
 int PlaylistModel::rowCount(const QModelIndex &parent) const
@@ -18,7 +20,15 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
     case UrlRole:
         return url;
     case TitleRole:
-        return url.fileName();
+        if (url.isLocalFile()) {
+            QFileInfo fileInfo(url.toLocalFile());
+            return fileInfo.fileName();
+        } else {
+            QString path = url.path();
+            int lastSlash = path.lastIndexOf('/');
+            if (lastSlash != -1 && lastSlash + 1 < path.length()) { return path.mid(lastSlash + 1); }
+            return path;
+        }
     default:
         return QVariant();
     }
@@ -37,6 +47,7 @@ void PlaylistModel::addMedia(const QUrl &url)
     beginInsertRows(QModelIndex(), m_mediaList.size(), m_mediaList.size());
     m_mediaList.append(url);
     endInsertRows();
+    emit rowCountChanged();
 
     if (m_currentIndex == -1) { setCurrentIndex(0); }
 }
@@ -48,6 +59,7 @@ void PlaylistModel::addMedias(const QList<QUrl> &urls)
     beginInsertRows(QModelIndex(), m_mediaList.size(), m_mediaList.size() + urls.size() - 1);
     m_mediaList.append(urls);
     endInsertRows();
+    emit rowCountChanged();
 
     if (m_currentIndex == -1) { setCurrentIndex(0); }
 }
@@ -59,6 +71,7 @@ void PlaylistModel::removeMedia(int index)
     beginRemoveRows(QModelIndex(), index, index);
     m_mediaList.removeAt(index);
     endRemoveRows();
+    emit rowCountChanged();
 
     if (m_mediaList.isEmpty()) {
         setCurrentIndex(-1);
@@ -72,7 +85,14 @@ void PlaylistModel::clear()
     beginResetModel();
     m_mediaList.clear();
     endResetModel();
+    emit rowCountChanged();
     setCurrentIndex(-1);
+}
+
+QUrl PlaylistModel::getUrl(int index) const
+{
+    if (index >= 0 && index < m_mediaList.size()) { return m_mediaList.at(index); }
+    return QUrl();
 }
 
 int PlaylistModel::currentIndex() const

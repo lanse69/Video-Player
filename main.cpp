@@ -15,7 +15,7 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-    // app.setWindowIcon(QIcon(":/images/icon.png"));
+    app.setWindowIcon(QIcon("/usr/share/icons/breeze/places/24/folder-videos.svg"));
     app.setApplicationName("Video Player");
 
     QQmlApplicationEngine engine;

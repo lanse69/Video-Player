@@ -21,8 +21,15 @@ ApplicationWindow {
         id: playlistModel
         onCurrentIndexChanged: {
             if (currentIndex >= 0) {
-                mediaEngine.setMedia(get(currentIndex).url)
-                mediaEngine.play()
+                var mediaUrl = playlistModel.getUrl(currentIndex)
+                if (mediaUrl) {
+                    mediaEngine.setMedia(mediaUrl)
+                    mediaEngine.play()
+                    var title = playlistModel.data(playlistModel.index(currentIndex, 0), PlaylistModel.TitleRole)
+                    if (title) {
+                        window.title = "Video Player - " + title
+                    }
+                }
             }
         }
     }
@@ -40,6 +47,7 @@ ApplicationWindow {
             MenuItem { action: actions.play }
             MenuItem { action: actions.pause }
             MenuItem { action: actions.stop }
+            MenuItem { action: actions.mute}
             MenuSeparator {}
             MenuItem { action: actions.previous }
             MenuItem { action: actions.next }
@@ -59,13 +67,17 @@ ApplicationWindow {
         pause.onTriggered: mediaEngine.pause()
         stop.onTriggered: mediaEngine.stop()
         previous.onTriggered: {
-            if (playlistModel.currentIndex > 0) {
-                playlistModel.currentIndex--
+            if (playlistModel.rowCount > 0) {
+                var newIndex = playlistModel.currentIndex - 1
+                if (newIndex < 0) newIndex = playlistModel.rowCount - 1
+                playlistModel.currentIndex = newIndex
             }
         }
         next.onTriggered: {
-            if (playlistModel.currentIndex < playlistModel.rowCount - 1) {
-                playlistModel.currentIndex++
+            if (playlistModel.rowCount > 0) {
+                var newIndex = playlistModel.currentIndex + 1
+                if (newIndex >= playlistModel.rowCount) newIndex = 0
+                playlistModel.currentIndex = newIndex
             }
         }
         aboutQt.onTriggered: content.dialogs.aboutQt.open()

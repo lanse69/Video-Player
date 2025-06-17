@@ -10,6 +10,8 @@ class PlaylistModel : public QAbstractListModel
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
+    Q_PROPERTY(int rowCount READ rowCount NOTIFY rowCountChanged)
+    Q_ENUMS(Roles)
 
 public:
     enum Roles { UrlRole = Qt::UserRole + 1, TitleRole };
@@ -24,12 +26,14 @@ public:
     Q_INVOKABLE void addMedias(const QList<QUrl> &urls);
     Q_INVOKABLE void removeMedia(int index);
     Q_INVOKABLE void clear();
+    Q_INVOKABLE QUrl getUrl(int index) const;
 
     int currentIndex() const;
     void setCurrentIndex(int index);
 
 signals:
     void currentIndexChanged(int index);
+    void rowCountChanged();
 
 private:
     QList<QUrl> m_mediaList;

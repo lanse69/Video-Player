@@ -9,6 +9,7 @@ Item {
     property alias pause: _pause
     property alias stop: _stop
     property alias mute: _mute
+    property alias subtitle: _subtitle
     property alias previous: _previous
     property alias next: _next
     property alias aboutQt: _aboutQt
@@ -56,12 +57,14 @@ Item {
         text: qsTr("&Mute")
         icon.name: "audio-volume-muted"
         checkable: true
+    }
 
-        onTriggered: {
-            if (content.mediaEngine) {
-                content.mediaEngine.setMuted(checked)
-            }
-        }
+    Action {
+        id: _subtitle
+        text: qsTr("&Subtitle")
+        icon.name: "add-subtitle"
+        checkable: true
+        checked: true
     }
 
     Action {

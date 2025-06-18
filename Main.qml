@@ -48,6 +48,10 @@ ApplicationWindow {
             MenuItem { action: actions.pause }
             MenuItem { action: actions.stop }
             MenuItem { action: actions.mute}
+            MenuItem {
+                action: actions.subtitle
+                enabled: mediaEngine && mediaEngine.hasSubtitle
+            }
             MenuSeparator {}
             MenuItem { action: actions.previous }
             MenuItem { action: actions.next }
@@ -66,6 +70,17 @@ ApplicationWindow {
         play.onTriggered: mediaEngine.play()
         pause.onTriggered: mediaEngine.pause()
         stop.onTriggered: mediaEngine.stop()
+        mute.onTriggered: {
+            if (content.mediaEngine) {
+                content.mediaEngine.setMuted(mute.checked)
+            }
+        }
+        subtitle.enabled: mediaEngine && mediaEngine.hasSubtitle
+        subtitle.onTriggered: {
+            if (content.mediaEngine) {
+                content.mediaEngine.setSubtitleVisible(subtitle.checked)
+            }
+        }
         previous.onTriggered: {
             if (playlistModel.rowCount > 0) {
                 var newIndex = playlistModel.currentIndex - 1
@@ -88,6 +103,15 @@ ApplicationWindow {
         anchors.fill: parent
         mediaEngine: mediaEngine
         playlistModel: playlistModel
+    }
+
+    Connections {
+        target: mediaEngine
+
+        function onHasSubtitleChanged() {
+            actions.subtitle.enabled = mediaEngine.hasSubtitle
+            actions.subtitle.checked = mediaEngine.subtitleVisible
+        }
     }
 
     function closeVideo() {

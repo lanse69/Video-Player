@@ -91,13 +91,14 @@ Rectangle {
         // 音量控制
         ToolButton {
             icon.name: mediaEngine && mediaEngine.muted ? "audio-volume-muted" :
-                            (mediaEngine && mediaEngine.volume < 0.01) ? "audio-volume-low" :
-                                (mediaEngine && mediaEngine.volume < 0.33) ? "audio-volume-medium" :
-                                    (mediaEngine && mediaEngine.volume < 0.66) ? "player-volume" :
+                            (mediaEngine && mediaEngine.volume < 0.3) ? "audio-volume-low" :
+                                (mediaEngine && mediaEngine.volume < 0.6) ? "audio-volume-medium" :
+                                    (mediaEngine && mediaEngine.volume < 0.9) ? "player-volume" :
                                         "audio-volume-high-danger"
             onClicked: {
                 if (mediaEngine) {
                     mediaEngine.setMuted(!mediaEngine.muted)
+                    actions.mute.trigger()
                 }
             }
         }
@@ -111,10 +112,18 @@ Rectangle {
 
             onMoved: {
                 if (mediaEngine) {
-                    if (mediaEngine.muted) {
-                        mediaEngine.setMuted(false)
+                    if (value === 0) {
+                        if (!mediaEngine.muted) {
+                            mediaEngine.setMuted(true)
+                            actions.mute.checked = true
+                        }
+                    } else {
+                        if (mediaEngine.muted) {
+                            mediaEngine.setMuted(false)
+                            actions.mute.checked = false
+                        }
+                        mediaEngine.setVolume(value)
                     }
-                    mediaEngine.setVolume(value)
                 }
             }
         }

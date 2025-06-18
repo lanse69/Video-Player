@@ -17,7 +17,7 @@ Rectangle {
 
         delegate: ItemDelegate {
             width: parent.width
-            text: playlist.data(playlist.index(currentIndex, 0), playlist.TitleRole)
+            text: model.title
             highlighted: index === playlist.currentIndex
 
             onClicked: {

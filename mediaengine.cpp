@@ -36,6 +36,9 @@ MediaEngine::MediaEngine(QObject *parent)
     connect(m_audioOutput, &QAudioOutput::volumeChanged, this, &MediaEngine::volumeChanged);
 
     connect(m_player, &QMediaPlayer::positionChanged, this, &MediaEngine::updateSubtitleState);
+
+    // 连接播放速率信号
+    connect(m_player, &QMediaPlayer::playbackRateChanged, this, &MediaEngine::playbackRateChanged);
 }
 
 QVideoSink *MediaEngine::videoSink() const
@@ -388,4 +391,15 @@ void MediaEngine::updateSubtitleState()
         m_subtitleText = newText;
         emit subtitleTextChanged();
     }
+}
+
+qreal MediaEngine::playbackRate() const
+{
+    return m_player->playbackRate();
+}
+
+void MediaEngine::setPlaybackRate(qreal rate)
+{
+    m_player->setPlaybackRate(rate);
+    emit playbackRateChanged();
 }

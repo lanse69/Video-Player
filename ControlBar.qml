@@ -58,14 +58,79 @@ Rectangle {
 
         // 进度条
         Slider {
+            id: positionSlider
             Layout.fillWidth: true
             from: 0
             to: mediaEngine ? mediaEngine.duration : 0
-            value: mediaEngine ? mediaEngine.position : 0
+
+            property bool isDragging: false // 是否拖拽
+            property real dragValue: 0
+
+            value: {
+                if (isDragging) {
+                    return dragValue
+                } else {
+                    return mediaEngine ? mediaEngine.position : 0
+                }
+            }
+
+            onPressedChanged: { // 处理拖拽
+                if (pressed) { // 开始拖拽
+                    isDragging = true
+                    dragValue = value
+                } else { // 结束拖拽
+                    isDragging = false
+                    if (mediaEngine) {
+                        mediaEngine.setPosition(dragValue)
+                    }
+                    thumbnailPopup.close()
+                }
+            }
 
             onMoved: {
-                if (mediaEngine) {
-                    mediaEngine.setPosition(value)
+                if (isDragging) {
+                    dragValue = position * to
+                }
+            }
+
+            // 缩略图弹出窗口
+            Popup {
+                id: thumbnailPopup
+                y: -height - 10
+                x: Math.min(Math.max(positionSlider.handle.x - width/2 + positionSlider.handle.width/2, 0),
+                          positionSlider.width - width)
+                width: 160
+                height: 90
+                padding: 0
+                closePolicy: Popup.NoAutoClose
+                visible: positionSlider.pressed && thumbnailImage.source !== ""
+
+                Image {
+                    id: thumbnailImage
+                    anchors.fill: parent
+                    anchors.margins: 2
+                    fillMode: Image.PreserveAspectFit
+                    cache: false
+                    asynchronous: true
+                    source: ""
+                }
+
+                // 显示时间
+                Label {
+                    anchors.bottom: parent.bottom
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottomMargin: 4
+                    color: "white"
+                    style: Text.Outline
+                    styleColor: "black"
+                    font.pixelSize: 12
+                    text: formatTime(Math.floor(positionSlider.dragValue / 1000))
+
+                    function formatTime(seconds) {
+                        var minutes = Math.floor(seconds / 60)
+                        seconds = seconds % 60
+                        return minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0')
+                    }
                 }
             }
         }
@@ -85,6 +150,68 @@ Rectangle {
                 var minutes = Math.floor(seconds / 60)
                 var secs = seconds % 60
                 return minutes.toString().padStart(2, '0') + ":" + secs.toString().padStart(2, '0')
+            }
+        }
+
+        // 播放速率选择按钮
+        ToolButton {
+            id: rateButton
+            text: mediaEngine ? mediaEngine.playbackRate + "x" : "1.0x"
+
+            onClicked: {
+                rateSelectionPopup.open()
+            }
+
+            // 速率选择窗口
+            Popup {
+                id: rateSelectionPopup
+                y: -height - 10
+                x: (rateButton.width - width) / 2
+                width: 100
+                height: rateSelectionColumn.height + 20
+                padding: 10
+
+                background: Rectangle {
+                    color: "#66000000"
+                    radius: 10
+                }
+
+                ColumnLayout {
+                    id: rateSelectionColumn
+                    width: parent.width
+
+                    Button {
+                        text: "0.5x"
+                        onClicked: {
+                            mediaEngine.setPlaybackRate(0.5)
+                            rateSelectionPopup.close()
+                        }
+                    }
+
+                    Button {
+                        text: "1.0x"
+                        onClicked: {
+                            mediaEngine.setPlaybackRate(1.0)
+                            rateSelectionPopup.close()
+                        }
+                    }
+
+                    Button {
+                        text: "1.5x"
+                        onClicked: {
+                            mediaEngine.setPlaybackRate(1.5)
+                            rateSelectionPopup.close()
+                        }
+                    }
+
+                    Button {
+                        text: "2.0x"
+                        onClicked: {
+                            mediaEngine.setPlaybackRate(2.0)
+                            rateSelectionPopup.close()
+                        }
+                    }
+                }
             }
         }
 

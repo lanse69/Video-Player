@@ -42,11 +42,21 @@ ApplicationWindow {
             MenuSeparator {}
             MenuItem { action: actions.exit }
         }
+
         Menu {
             title: qsTr("Play")
             MenuItem { action: actions.play }
             MenuItem { action: actions.pause }
             MenuItem { action: actions.stop }
+
+            Menu {
+                title: qsTr("Rate")
+                MenuItem { action: actions.zeroPointFiveRate }
+                MenuItem { action: actions.oneRate }
+                MenuItem { action: actions.onePointFiveRate }
+                MenuItem { action: actions.twoRate }
+            }
+
             MenuItem { action: actions.mute}
             MenuItem {
                 action: actions.subtitle
@@ -56,6 +66,7 @@ ApplicationWindow {
             MenuItem { action: actions.previous }
             MenuItem { action: actions.next }
         }
+
         Menu {
             title: qsTr("Help")
             MenuItem { action: actions.aboutQt }
@@ -96,6 +107,10 @@ ApplicationWindow {
             }
         }
         aboutQt.onTriggered: content.dialogs.aboutQt.open()
+        zeroPointFiveRate.onTriggered: mediaEngine.setPlaybackRate(0.5)
+        oneRate.onTriggered: mediaEngine.setPlaybackRate(1)
+        onePointFiveRate.onTriggered: mediaEngine.setPlaybackRate(1.5)
+        twoRate.onTriggered: mediaEngine.setPlaybackRate(2)
     }
 
     Content {

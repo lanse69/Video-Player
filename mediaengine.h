@@ -24,6 +24,7 @@ class MediaEngine : public QObject
     Q_PROPERTY(bool hasSubtitle READ hasSubtitle NOTIFY hasSubtitleChanged)
     Q_PROPERTY(bool subtitleVisible READ subtitleVisible WRITE setSubtitleVisible NOTIFY subtitleVisibleChanged)
     Q_PROPERTY(bool userMutedSubtitle READ userMutedSubtitle WRITE setUserMutedSubtitle NOTIFY userMutedSubtitleChanged)
+    Q_PROPERTY(qreal playbackRate READ playbackRate WRITE setPlaybackRate NOTIFY playbackRateChanged)
 
 public:
     explicit MediaEngine(QObject *parent = nullptr);
@@ -41,6 +42,7 @@ public:
     bool userMutedSubtitle() const;
     void setUserMutedSubtitle(bool muted);
     void updateSubtitleState();
+    qreal playbackRate() const; // 返回播放速率
 
     Q_INVOKABLE void play();
     Q_INVOKABLE void pause();
@@ -52,6 +54,7 @@ public:
     Q_INVOKABLE void setVideoSink(QVideoSink *sink);
     Q_INVOKABLE void loadSubtitle(const QUrl &mediaUrl);
     Q_INVOKABLE void setSubtitleVisible(bool visible);
+    Q_INVOKABLE void setPlaybackRate(qreal rate); // 设置播放速率
 
 signals:
     void videoSinkChanged();
@@ -67,6 +70,7 @@ signals:
     void hasSubtitleChanged();
     void subtitleVisibleChanged();
     void userMutedSubtitleChanged();
+    void playbackRateChanged();
 
 private:
     void parseLrcFile(const QString &filePath);

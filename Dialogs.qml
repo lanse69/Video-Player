@@ -18,10 +18,10 @@ Item {
 
     MessageDialog {
         id: _aboutQt
-        title: "About Qt"
+        title: qsTr("About Qt")
         modality: Qt.WindowModal
         buttons: MessageDialog.Ok
-        text: "Qt " + Qt.platform.os + " version"
-        informativeText: "This application uses Qt version " + Qt.runtimeVersion
+        text: qsTr("This is a video player.")
+        informativeText: qsTr("This application uses Qt version 6.9.1")
     }
 }

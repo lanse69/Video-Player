@@ -13,6 +13,10 @@ Item {
     property alias previous: _previous
     property alias next: _next
     property alias aboutQt: _aboutQt
+    property alias zeroPointFiveRate: _zeroPointFiveRate
+    property alias oneRate: _oneRate
+    property alias onePointFiveRate: _onePointFiveRate
+    property alias twoRate: _twoRate
 
     Action {
         id: _open
@@ -83,5 +87,25 @@ Item {
         id: _aboutQt
         text: qsTr("About Qt")
         icon.name: "qtcreator"
+    }
+
+    Action {
+        id: _zeroPointFiveRate
+        text: qsTr("0.5x")
+    }
+
+    Action {
+        id: _oneRate
+        text: qsTr("1x")
+    }
+
+    Action {
+        id: _onePointFiveRate
+        text: qsTr("1.5x")
+    }
+
+    Action {
+        id: _twoRate
+        text: qsTr("2x")
     }
 }

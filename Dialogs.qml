@@ -10,16 +10,18 @@ Item {
         id: _fileOpen
         title: "Open Video Files"
         currentFolder: StandardPaths.standardLocations(StandardPaths.MoviesLocation)[0]
-        nameFilters: ["All files(*.mp4 *.avi *.mkv *.mov *.wmv *.ogg *.mp3)", "Video files (*.mp4 *.avi *.mkv *.mov *.wmv)", "Music files (*.ogg *.mp3)"]
+        nameFilters: ["All AV files(*.mp4 *.avi *.mkv *.mov *.wmv *.ogg *.mp3 *.wav *.flac)",
+                        "Video files (*.mp4 *.avi *.mkv *.mov *.wmv)",
+                        "Music files (*.ogg *.mp3 *.wav *.flac)"]
         fileMode: FileDialog.OpenFiles
     }
 
     MessageDialog {
         id: _aboutQt
-        title: "About Qt"
+        title: qsTr("About Qt")
         modality: Qt.WindowModal
         buttons: MessageDialog.Ok
-        text: "Qt " + Qt.platform.os + " version"
-        informativeText: "This application uses Qt version " + Qt.runtimeVersion
+        text: qsTr("This is a video player.")
+        informativeText: qsTr("This application uses Qt version 6.9.1")
     }
 }

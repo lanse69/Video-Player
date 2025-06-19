@@ -9,9 +9,14 @@ Item {
     property alias pause: _pause
     property alias stop: _stop
     property alias mute: _mute
+    property alias subtitle: _subtitle
     property alias previous: _previous
     property alias next: _next
     property alias aboutQt: _aboutQt
+    property alias zeroPointFiveRate: _zeroPointFiveRate
+    property alias oneRate: _oneRate
+    property alias onePointFiveRate: _onePointFiveRate
+    property alias twoRate: _twoRate
 
     Action {
         id: _open
@@ -56,12 +61,14 @@ Item {
         text: qsTr("&Mute")
         icon.name: "audio-volume-muted"
         checkable: true
+    }
 
-        onTriggered: {
-            if (content.mediaEngine) {
-                content.mediaEngine.setMuted(checked)
-            }
-        }
+    Action {
+        id: _subtitle
+        text: qsTr("&Subtitle")
+        icon.name: "add-subtitle"
+        checkable: true
+        checked: true
     }
 
     Action {
@@ -80,5 +87,25 @@ Item {
         id: _aboutQt
         text: qsTr("About Qt")
         icon.name: "qtcreator"
+    }
+
+    Action {
+        id: _zeroPointFiveRate
+        text: qsTr("0.5x")
+    }
+
+    Action {
+        id: _oneRate
+        text: qsTr("1x")
+    }
+
+    Action {
+        id: _onePointFiveRate
+        text: qsTr("1.5x")
+    }
+
+    Action {
+        id: _twoRate
+        text: qsTr("2x")
     }
 }

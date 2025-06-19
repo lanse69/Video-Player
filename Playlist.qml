@@ -38,18 +38,18 @@ ScrollView {
                     axis: Drag.YAxis
                     threshold: 10
                 }
-                onPressed:{
+                onPressed:{                 //按下鼠标计时器开始计时，并把当前点击项置顶
                     timer.start()
                     delegateItem.z=10
                 }
-                onReleased: {
+                onReleased: {               //松开鼠标，计时器结束，判断是否为长按或点击
                     timer.stop()
                     if(timer.isPress){
                         timer.isPress=false
                         delegateItem.z=0
-                        delegateItem.y=index*50
+                        delegateItem.y=index*50     //松开后按照当前索引固定位置
                     }else{
-                        listView.currentIndex=index
+                        playlist.currentIndex=index      //将被点击项设为当前播放项
                     }
                 }
                 // 拖拽过程
@@ -79,13 +79,13 @@ ScrollView {
                     }
                 }
 
-                states: State {
-                    when:dragArea.drag.active
-                    ParentChange {
-                        target: itemRec
-                        parent: listView
-                    }
-                }
+                // states: State {
+                //     when:dragArea.drag.active       //拖拽时改变拖拽项的父对象，以此实现计数
+                //     ParentChange {
+                //         target: itemRec
+                //         parent: listView
+                //     }
+                // }
             }
         }
     }

@@ -42,16 +42,31 @@ ApplicationWindow {
             MenuSeparator {}
             MenuItem { action: actions.exit }
         }
+
         Menu {
             title: qsTr("Play")
             MenuItem { action: actions.play }
             MenuItem { action: actions.pause }
             MenuItem { action: actions.stop }
+
+            Menu {
+                title: qsTr("Rate")
+                MenuItem { action: actions.zeroPointFiveRate }
+                MenuItem { action: actions.oneRate }
+                MenuItem { action: actions.onePointFiveRate }
+                MenuItem { action: actions.twoRate }
+            }
+
             MenuItem { action: actions.mute}
+            MenuItem {
+                action: actions.subtitle
+                enabled: mediaEngine && mediaEngine.hasSubtitle
+            }
             MenuSeparator {}
             MenuItem { action: actions.previous }
             MenuItem { action: actions.next }
         }
+
         Menu {
             title: qsTr("Help")
             MenuItem { action: actions.aboutQt }
@@ -66,6 +81,17 @@ ApplicationWindow {
         play.onTriggered: mediaEngine.play()
         pause.onTriggered: mediaEngine.pause()
         stop.onTriggered: mediaEngine.stop()
+        mute.onTriggered: {
+            if (content.mediaEngine) {
+                content.mediaEngine.setMuted(mute.checked)
+            }
+        }
+        subtitle.enabled: mediaEngine && mediaEngine.hasSubtitle
+        subtitle.onTriggered: {
+            if (content.mediaEngine) {
+                content.mediaEngine.setSubtitleVisible(subtitle.checked)
+            }
+        }
         previous.onTriggered: {
             if (playlistModel.rowCount > 0) {
                 var newIndex = playlistModel.currentIndex - 1
@@ -81,6 +107,10 @@ ApplicationWindow {
             }
         }
         aboutQt.onTriggered: content.dialogs.aboutQt.open()
+        zeroPointFiveRate.onTriggered: mediaEngine.setPlaybackRate(0.5)
+        oneRate.onTriggered: mediaEngine.setPlaybackRate(1)
+        onePointFiveRate.onTriggered: mediaEngine.setPlaybackRate(1.5)
+        twoRate.onTriggered: mediaEngine.setPlaybackRate(2)
     }
 
     Content {
@@ -88,6 +118,15 @@ ApplicationWindow {
         anchors.fill: parent
         mediaEngine: mediaEngine
         playlistModel: playlistModel
+    }
+
+    Connections {
+        target: mediaEngine
+
+        function onHasSubtitleChanged() {
+            actions.subtitle.enabled = mediaEngine.hasSubtitle
+            actions.subtitle.checked = mediaEngine.subtitleVisible
+        }
     }
 
     function closeVideo() {

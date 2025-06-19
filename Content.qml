@@ -23,7 +23,7 @@ Item {
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
-            KeyNavigation.backtab: parent
+
 
             onPositionChanged: {
                 // 当鼠标靠近右侧时显示播放列表
@@ -47,16 +47,24 @@ Item {
         height: 30
         placeholderText: "请输入搜索内容(限10字)"
         placeholderTextColor: "gray"
+        focus: true
 
+        Keys.onPressed: (event)=>{
+                            //确保输入合法
+                            if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                                event.accepted=true
+                            }
+                            //确保输入内容的大小
+                            if(length>=10&&event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                                event.accepted=true
+                            }
+                        }
 
         onTextChanged: {
-            //确保输入最多十个字
-            if(length>10){
-                remove(9,length-1)
-            }
             //根据搜索框的状态改变列表视图
-            if(length===0){
+            if(length===0&&searchlistModel.currentIndex!==-1){
                 playlist.visible=true
+                content.playlistModel.currentIndex= content.playlistModel.indexByUrl(searchlistModel.getUrl(searchlistModel.currentIndex))
                 searchList.visible=false
             }else{
                 playlist.visible=false
@@ -90,6 +98,11 @@ Item {
         }
         visible: false
         playlist: searchlistModel
+        onVisibleChanged: {
+            if(!visible){
+                searchBox.clear()
+            }
+        }
     }
 
     //搜索播放列表的数据项

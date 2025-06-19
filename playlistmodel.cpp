@@ -202,6 +202,15 @@ void PlaylistModel::setHistroy(
     addMedias(readFile); //重新读取列表
 }
 
+int PlaylistModel::indexByUrl(
+    QUrl url)
+{
+    for (int i = 0; i < m_mediaList.size(); i++) {
+        if (m_mediaList[i].url == url)
+            return i;
+    }
+}
+
 bool PlaylistModel::isMatch(
     QString title, QString text)
 {

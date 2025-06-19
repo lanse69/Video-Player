@@ -8,6 +8,7 @@ Item {
     property alias dialogs: _dialogs
     property MediaEngine mediaEngine
     property PlaylistModel playlistModel
+    property alias player: _player
 
     Dialogs {
         id: _dialogs
@@ -15,7 +16,7 @@ Item {
 
     // 视频播放区域
     Player {
-        id: player
+        id: _player
         anchors.fill: parent
         mediaEngine: content.mediaEngine
 
@@ -35,6 +36,15 @@ Item {
                 controlBar.visible = (mouseY > parent.height - 100)
             }
 
+            onDoubleClicked: { // 双击全屏
+                if (window.visibility === ApplicationWindow.FullScreen) {
+                    window.showNormal()
+                    menuBar.visible = true  // 退出全屏时显示菜单栏
+                } else {
+                    window.showFullScreen()
+                    menuBar.visible = false // 进入全屏时隐藏菜单栏
+                }
+            }
         }
     }
 

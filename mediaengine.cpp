@@ -6,6 +6,8 @@
 #include <QDir>
 #include <QRegularExpression>
 #include <QStringConverter>
+#include <QSize>
+#include <QVideoSink>
 
 MediaEngine::MediaEngine(QObject *parent)
     : QObject(parent)
@@ -398,4 +400,29 @@ void MediaEngine::setPlaybackRate(qreal rate)
 {
     m_player->setPlaybackRate(rate);
     emit playbackRateChanged();
+}
+
+int MediaEngine::loops() const
+{
+    return m_player->loops();
+}
+
+void MediaEngine::setLoops(int loops)
+{
+    if (loops == 1 || loops == -1) { // loops的值只有-1和1
+        if (loops != m_player->loops()) {
+            m_player->setLoops(loops);
+            emit loopsChanged();
+        }
+    }
+}
+
+qreal MediaEngine::videoAspectRatio() const
+{
+    if (m_player->videoOutput()) {
+        QVideoSink videoSink = m_player->videoOutput();
+        QSize size = videoSink.videoSize();
+        if (size.isValid()) return qreal(size.width() / size.height());
+    }
+    return 0;
 }

@@ -34,6 +34,13 @@ ApplicationWindow {
         }
     }
 
+    //历史记录的数据项
+    PlaylistModel {
+        id: histroyListModel
+        Component.onCompleted: {
+            histroy()
+        }
+    }
     menuBar: MenuBar {
         Menu {
             title: qsTr("File")
@@ -41,11 +48,28 @@ ApplicationWindow {
             MenuItem { action: actions.close }
             MenuSeparator {}
             MenuItem { action: actions.exit }
+            Menu{
+                title: qsTr("最近打开")
+                Repeater{
+                    model:histroyListModel
+                    delegate:MenuItem{
+                        action:Action {
+                                id:_histroy
+                                property string url:model.url
+                                text: qsTr("")
+                                onTriggered: {
+                                    let urls=[url]
+                                    playlistModel.addMedias(urls)
+                                }
+                            }
+                        text: model.title
+                    }
+                }
+            }
         }
-
         Menu {
             title: qsTr("Play")
-            MenuItem { action: actions.play }
+            MenuItem { action: actions.play}
             MenuItem { action: actions.pause }
             MenuItem { action: actions.stop }
 

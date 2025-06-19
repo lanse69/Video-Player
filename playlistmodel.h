@@ -41,7 +41,10 @@ public:
     Q_INVOKABLE void clear();                            //清空数据项
     Q_INVOKABLE QUrl getUrl(int index) const;            //获取url
     Q_INVOKABLE void move(int preIndex, int newIndex,
-                          int num); //移动指定数量的元素到指定位置
+                          int num);               //移动指定数量的元素到指定位置
+    Q_INVOKABLE QList<QUrl> search(QString text); //按照给定的text筛选title并返回
+    Q_INVOKABLE void histroy();                   //初始化历史列表(最多5项)
+    Q_INVOKABLE void setHistroy(QUrl url);        //设置历史列表 (最多5项)
     //暴露属性的setter和getter
     int currentIndex() const;
     void setCurrentIndex(int index);
@@ -51,6 +54,8 @@ signals:
     void rowCountChanged();
 
 private:
+    bool isMatch(QString title, QString text); //返回title是否包含text字符串(KMP算法）
+
     QString getTitleByFF(QUrl url) const; //通过ffmpeg获取文件数据内的标题
     QList<MediaInfo> m_mediaList;
     int m_currentIndex = -1;

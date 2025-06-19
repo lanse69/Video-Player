@@ -1,6 +1,7 @@
 #include "playlistmodel.h"
 #include <QDebug>
 #include <QFileInfo>
+#include <QFile>
 
 PlaylistModel::PlaylistModel(QObject *parent) : QAbstractListModel(parent) {}
 
@@ -104,6 +105,7 @@ void PlaylistModel::move(
         || newIndex > m_mediaList.size() || preIndex == newIndex) { //边界检查
         return;
     }
+
     beginMoveRows(QModelIndex(),
                   preIndex,
                   preIndex + num - 1,
@@ -117,6 +119,122 @@ void PlaylistModel::move(
         m_mediaList.insert(newIndex, movingItems[i]);
     }
     endMoveRows();
+
+    //根据preIndex和newIndex修改m_current
+    if (preIndex <= m_currentIndex && m_currentIndex < preIndex + num) { //当m_currentIndex是移动项时
+        m_currentIndex = newIndex + (m_currentIndex - preIndex);
+    } else if (m_currentIndex >= preIndex + num
+               && m_currentIndex <= newIndex) { //在移动项后并在移动目标前面
+        m_currentIndex -= num;
+    } else if (m_currentIndex >= newIndex
+               && m_currentIndex < preIndex) { //在移动项前并在移动目标后面
+        m_currentIndex += num;
+    }
+}
+
+QList<QUrl> PlaylistModel::search(
+    QString text)
+{
+    QList<QUrl> ans;
+    for (int i = 0; i < m_mediaList.size(); i++) {
+        if (isMatch(m_mediaList[i].title, text)) {
+            ans.append(m_mediaList[i].url);
+        }
+    }
+    return ans;
+}
+
+void PlaylistModel::histroy()
+{
+    QFile file("./histroy.txt");
+    QList<QUrl> readFile;
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
+        while (!in.atEnd()) {
+            QString line = in.readLine().trimmed();
+            readFile.append(QUrl(line));
+        }
+        file.close();
+    } else {
+        qDebug() << "histroyread failed";
+    }
+    addMedias(readFile);
+}
+
+void PlaylistModel::setHistroy(
+    QUrl url)
+{
+    //读入数据
+    QFile file("histroy.txt");
+    QList<QUrl> readFile;
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
+        while (!in.atEnd()) {
+            QString line = in.readLine();
+            readFile.append(line);
+        }
+        file.close();
+    } else {
+        qDebug() << "setHistroy read failed";
+    }
+    //移除已存在的相同的url
+    if (readFile.contains(url)) {
+        readFile.removeOne(url);
+    }
+    readFile.prepend(url);
+
+    //清除超出范围的数据
+    while (readFile.length() > 5) {
+        readFile.removeLast();
+    }
+    //写入文件
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        QTextStream out(&file);
+        for (auto &i : readFile) {
+            out << i.toString() << Qt::endl;
+        }
+        file.close();
+    } else {
+        qDebug() << "setHistory write failed";
+    }
+
+    clear();             //清空列表
+    addMedias(readFile); //重新读取列表
+}
+
+bool PlaylistModel::isMatch(
+    QString title, QString text)
+{
+    int m = title.size(), n = text.size();
+    QVector<int> match(n, 0);
+    int j = 0;
+    for (int i = 1; i < n; i++) {
+        if (text[j] == text[i]) {
+            match[i] = j + 1;
+            j++;
+        } else {
+            while (j > 0 && text[j] != text[i]) {
+                j = match[j - 1];
+            }
+            if (text[j] == text[i]) {
+                j++;
+            }
+            match[i] = j;
+        }
+    }
+    j = 0;
+    for (int i = 0; i < m; i++) {
+        if (text[j] == title[i]) {
+            j++;
+            if (j == n) {
+                return true;
+            }
+        } else {
+            if (j != 0)
+                j = match[j - 1];
+        }
+    }
+    return false;
 }
 
 int PlaylistModel::currentIndex() const
@@ -141,24 +259,30 @@ QString PlaylistModel::getTitleByFF(
     const char *fileName = utf8.constData();
     AVFormatContext *fmt_ctx = NULL;
     QString ans{};
-    if (avformat_open_input(&fmt_ctx, fileName, NULL, NULL) < 0) { //初始化AVFormatContext
+
+    //初始化AVFormatContext
+    if (avformat_open_input(&fmt_ctx, fileName, NULL, NULL) < 0) {
         av_log(NULL, AV_LOG_ERROR, "avformat_open_input failed\n");
         avformat_close_input(&fmt_ctx);
         ans = "";
     }
-    if (avformat_find_stream_info(fmt_ctx, NULL) < 0) { //从流中获取信息到AVFormatContext中
+
+    //从流中获取信息到AVFormatContext中
+    if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
         av_log(NULL, AV_LOG_ERROR, "avformat_find_stream_info failed\n");
         avformat_close_input(&fmt_ctx);
         ans = "";
     }
+
+    //从AVFormatContext中获取标题
     AVDictionaryEntry *tag = NULL;
-    tag = av_dict_get(fmt_ctx->metadata, "title", NULL, 0); //从AVFormatContext中获取标题
+    tag = av_dict_get(fmt_ctx->metadata, "title", NULL, 0);
     if (tag) {
         ans = QString(tag->value); // 输出标题
     } else {
-        qDebug() << "未找到标题信息\n";
         ans = "";
     }
+
     avformat_close_input(&fmt_ctx);
     return ans;
 }

@@ -56,11 +56,7 @@ Item {
 
         function onSubtitleVisibleChanged() {
             subtitleVisible = mediaEngine.subtitleVisible
-            if (mediaEngine.subtitleVisible) {
-                currentSubtitle = mediaEngine.subtitleText
-            } else {
-                currentSubtitle = ""
-            }
+            currentSubtitle = subtitleVisible ? mediaEngine.subtitleText : ""
         }
 
         function onHasSubtitleChanged() {

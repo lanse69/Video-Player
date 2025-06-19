@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
 import VideoPlayer
+import QtQuick.Dialogs
 
 ApplicationWindow {
     id: window
@@ -31,6 +32,19 @@ ApplicationWindow {
                     }
                 }
             }
+        }
+    }
+
+    // 截图管理器
+    CaptureManager {
+        id: captureManager
+        onScreenshotCaptured: {
+            content.dialogs.previewDialog.captureManager = captureManager
+            content.dialogs.previewDialog.open()
+        }
+        onErrorOccurred: function(error) {
+            content.dialogs.errorDialog.text = error;
+            content.dialogs.errorDialog.open();
         }
     }
 
@@ -65,6 +79,15 @@ ApplicationWindow {
             MenuSeparator {}
             MenuItem { action: actions.previous }
             MenuItem { action: actions.next }
+        }
+
+        Menu {
+            title: qsTr("Capture")
+            Menu {
+                title: qsTr("Screenshot")
+                MenuItem { action: actions.screenshotWindow }
+                MenuItem { action: actions.screenshotFull }
+            }
         }
 
         Menu {
@@ -111,6 +134,14 @@ ApplicationWindow {
         oneRate.onTriggered: mediaEngine.setPlaybackRate(1)
         onePointFiveRate.onTriggered: mediaEngine.setPlaybackRate(1.5)
         twoRate.onTriggered: mediaEngine.setPlaybackRate(2)
+        screenshotWindow.onTriggered: {
+            mediaEngine.pause()
+            window.takeScreenshot(CaptureManager.WindowCapture)
+        }
+        screenshotFull.onTriggered: {
+            mediaEngine.pause()
+            window.takeScreenshot(CaptureManager.FullScreenCapture)
+        }
     }
 
     Content {
@@ -133,5 +164,24 @@ ApplicationWindow {
         mediaEngine.stop()
         playlistModel.clear()
         title = "Video Player"
+    }
+
+    function takeScreenshot(type) {
+        screenshotTimer.type = type
+        screenshotTimer.start()
+    }
+
+    Timer {
+        id: screenshotTimer
+        property int type
+        interval: 50 // 等待50毫秒确保UI更新
+        onTriggered: {
+            if (type === CaptureManager.WindowCapture) {
+                captureManager.captureScreenshot(CaptureManager.WindowCapture)
+            }
+            if (type === CaptureManager.FullScreenCapture) {
+                captureManager.captureScreenshot(CaptureManager.FullScreenCapture)
+            }
+        }
     }
 }

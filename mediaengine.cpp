@@ -15,7 +15,6 @@ MediaEngine::MediaEngine(QObject *parent)
     , m_hasSubtitle{false}
     , m_subtitleVisible{true}
     , m_userMutedSubtitle{false}
-// , m_subtitleExpiryTime{0}
 {
     m_player = new QMediaPlayer(this);
     m_audioOutput = new QAudioOutput(this);
@@ -35,6 +34,7 @@ MediaEngine::MediaEngine(QObject *parent)
     // 音量变化连接
     connect(m_audioOutput, &QAudioOutput::volumeChanged, this, &MediaEngine::volumeChanged);
 
+    // 音视频播放位置改变,字幕改变
     connect(m_player, &QMediaPlayer::positionChanged, this, &MediaEngine::updateSubtitleState);
 
     // 连接播放速率信号
@@ -164,7 +164,6 @@ void MediaEngine::loadSubtitle(const QUrl &mediaUrl)
 
     QStringList subtitleExts = {".lrc", ".srt", ".ass", ".ssa", ".sub", ".txt"};
     QDir dir(path);
-    bool subtitleFound = false;
 
     // 尝试所有可能的字幕扩展名
     for (const QString &ext : subtitleExts) {
@@ -176,7 +175,6 @@ void MediaEngine::loadSubtitle(const QUrl &mediaUrl)
             } else {
                 parseSrtFile(subtitlePath);
             }
-            subtitleFound = true;
             break;
         }
     }
@@ -201,7 +199,7 @@ void MediaEngine::parseLrcFile(const QString &filePath)
 
     QTextStream in(&file);
     in.setEncoding(QStringConverter::Utf8);
-    QRegularExpression timeRegex(R"(\[(\d+):(\d+)(?:\.|:)?(\d*)\])");
+    static const QRegularExpression timeRegex(R"(\[(\d+):(\d+)(?:\.|:)?(\d*)\])");
 
     // 临时存储所有字幕条目
     QList<QPair<qint64, QString>> tempSubtitles;
@@ -226,7 +224,7 @@ void MediaEngine::parseLrcFile(const QString &filePath)
                     } else if (millisStr.length() == 3) {
                         milliseconds = millisStr.toInt(); // 三位数毫秒
                     } else if (millisStr.length() > 3) {
-                        milliseconds = millisStr.left(3).toInt(); // 取前三位
+                        milliseconds = QStringView(millisStr).left(3).toInt(); // 取前三位
                     }
                 }
                 qint64 timeMs = minutes * 60000 + seconds * 1000 + milliseconds;
@@ -264,7 +262,7 @@ void MediaEngine::parseSrtFile(const QString &filePath)
 
     QTextStream in(&file);
     in.setEncoding(QStringConverter::Utf8);
-    QRegularExpression timeRegex(R"((\d{1,2}):(\d{2}):(\d{2})[,.](\d{3}))");
+    static const QRegularExpression timeRegex(R"((\d{1,2}):(\d{2}):(\d{2})[,.](\d{3}))");
 
     while (!in.atEnd()) {
         QString line = in.readLine().trimmed();
@@ -382,9 +380,7 @@ void MediaEngine::setUserMutedSubtitle(bool muted)
 
 void MediaEngine::updateSubtitleState()
 {
-    qint64 position = m_player->position();
     QString newText = subtitleText();
-    // qint64 newExpiryTime = getSubtitleExpiryTime(position);
 
     // 更新字幕文本
     if (m_subtitleText != newText) {

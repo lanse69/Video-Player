@@ -17,6 +17,8 @@ Item {
     property alias oneRate: _oneRate
     property alias onePointFiveRate: _onePointFiveRate
     property alias twoRate: _twoRate
+    property alias screenshotWindow: _screenshotWindow
+    property alias screenshotFull: _screenshotFull
 
     Action {
         id: _open
@@ -107,5 +109,17 @@ Item {
     Action {
         id: _twoRate
         text: qsTr("2x")
+    }
+
+    Action {
+        id: _screenshotWindow
+        text: qsTr("Window")
+        icon.name: "camera-photo"
+    }
+
+    Action {
+        id: _screenshotFull
+        text: qsTr("Full Screen")
+        icon.name: "camera-photo"
     }
 }

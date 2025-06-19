@@ -25,10 +25,10 @@ Item {
 
             onPositionChanged: {
                 // 当鼠标靠近右侧时显示播放列表
-                playlist.visible = (mouseX > parent.width - 50)
-
+                playlist.visible = (mouseX > parent.width *(3/4))
+                playlistcurtain.visible=(mouseX > parent.width *(3/4))
                 // 当鼠标靠近底部时显示控制栏
-                controlBar.visible = (mouseY > parent.height - 50)
+                controlBar.visible = (mouseY > parent.height - 100)
             }
         }
     }
@@ -44,6 +44,16 @@ Item {
         playlist: content.playlistModel
     }
 
+    //播放列表的底层
+    Rectangle{
+        id:playlistcurtain
+        width: parent.width*(1/4)
+        height: parent.height
+        visible: false
+        anchors.right: parent.right
+        color: "black"
+        opacity: 0.2
+    }
     // 控制栏（底部）
     ControlBar {
         id: controlBar

@@ -55,6 +55,21 @@ install(TARGETS appVideo-Player
 
 
 
+pkg_check_modules(AVCODEC REQUIRED libavcodec)
+pkg_check_modules(AVFORMAT REQUIRED libavformat)
+pkg_check_modules(AVUTIL REQUIRED libavutil)
+pkg_check_modules(SWSCALE REQUIRED libswscale)
+pkg_check_modules(AVFILTER REQUIRED libavfilter)
+
+# 链接 FFmpeg 库
+target_link_libraries(appVideo-Player
+    PRIVATE
+    ${AVCODEC_LIBRARIES}
+    ${AVFORMAT_LIBRARIES}
+    ${AVUTIL_LIBRARIES}
+    ${SWSCALE_LIBRARIES}
+    ${AVFILTER_LIBRARIES}
+)
 
 
 

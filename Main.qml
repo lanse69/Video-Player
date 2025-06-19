@@ -20,14 +20,14 @@ ApplicationWindow {
     PlaylistModel {
         id: playlistModel
         onCurrentIndexChanged: {
-            if (currentIndex >= 0) {
-                var mediaUrl = playlistModel.getUrl(currentIndex)
+            if (playlistModel.currentIndex >= 0) {
+                var mediaUrl = getUrl(currentIndex)
                 if (mediaUrl) {
                     mediaEngine.setMedia(mediaUrl)
                     mediaEngine.play()
-                    var title = playlistModel.data(playlistModel.index(currentIndex, 0), PlaylistModel.TitleRole)
+                    var title = playlistModel.data(playlistModel.index(playlistModel.currentIndex,0),PlaylistModel.TitleRole)
                     if (title) {
-                        window.title = "Video Player - " + title
+                        window.title = "Video Player - "+title
                     }
                 }
             }

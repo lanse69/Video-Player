@@ -24,29 +24,20 @@ Item {
         mediaEngine: content.mediaEngine
 
         // 鼠标区域控制控制栏和列表显示
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-            KeyNavigation.backtab: parent
+        HoverHandler {
+            id:mouseHover
+            acceptedDevices: PointerDevice.Mouse
+            target: parent
 
-            onPositionChanged: {
-                // 当鼠标靠近右侧时显示播放列表
-                playlist.visible = (mouseX > parent.width *(3/4))&&!searchList.visible&&searchBox.length===0
-                searchBox.visible=(mouseX > parent.width *(3/4))
-                searchList.visible=(mouseX > parent.width *(3/4))&&!playlist.visible&&searchBox.length!==0
-                playlistcurtain.visible=(mouseX > parent.width *(3/4))
-                // 当鼠标靠近底部时显示控制栏
-                controlBar.visible = (mouseY > parent.height - 100)
-            }
+            onPointChanged: {
+                    // 当鼠标靠近右侧时显示播放列表
+                    playlist.visible = (point.position.x > parent.width *(3/4))&&!searchList.visible&&searchBox.length===0
+                    searchBox.visible=(point.position.x > parent.width *(3/4))
+                    searchList.visible=(point.position.x > parent.width *(3/4))&&!playlist.visible&&searchBox.length!==0
+                    playlistcurtain.visible=(point.position.x > parent.width *(3/4))
+                    // 当鼠标靠近底部时显示控制栏
+                    controlBar.visible = (point.position.y > parent.height - 100)
 
-            onDoubleClicked: { // 双击全屏
-                if (window.visibility === ApplicationWindow.FullScreen) {
-                    window.showNormal()
-                    menuBar.visible = true  // 退出全屏时显示菜单栏
-                } else {
-                    window.showFullScreen()
-                    menuBar.visible = false // 进入全屏时隐藏菜单栏
-                }
             }
         }
     }
@@ -57,19 +48,28 @@ Item {
         anchors.top: parent.top
         width: playlist.width
         anchors.right: parent.right
+        visible: false
         height: 30
         placeholderText: "请输入搜索内容(限10字)"
         placeholderTextColor: "gray"
+        focus: true
 
+        Keys.onPressed: (event)=>{
+                            //确保输入合法
+                            if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                                event.accepted=true
+                            }
+                            //确保输入内容的大小
+                            if(length>=10&&event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                                event.accepted=true
+                            }
+                        }
 
         onTextChanged: {
-            //确保输入最多十个字
-            if(length>10){
-                remove(9,length-1)
-            }
             //根据搜索框的状态改变列表视图
-            if(length===0){
+            if(length===0&&searchlistModel.currentIndex!==-1){
                 playlist.visible=true
+                content.playlistModel.currentIndex= content.playlistModel.indexByUrl(searchlistModel.getUrl(searchlistModel.currentIndex))
                 searchList.visible=false
             }else{
                 playlist.visible=false
@@ -103,6 +103,11 @@ Item {
         }
         visible: false
         playlist: searchlistModel
+        onVisibleChanged: {
+            if(!visible){
+                searchBox.clear()
+            }
+        }
     }
 
     //搜索播放列表的数据项

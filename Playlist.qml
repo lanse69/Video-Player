@@ -11,9 +11,6 @@ ScrollView {
     anchors.right: parent.right
     clip: true
 
-    Flickable {
-        boundsBehavior: Flickable.StopAtBounds // 禁止拖动越界
-    }
 
     ListView {
         id: listView
@@ -31,58 +28,53 @@ ScrollView {
             }
         }
 
-        delegate: ItemDelegate {
+        delegate: Rectangle {
             id:delegateItem
             width: scoll.width
             height: 50
-            text: model.title
-            highlighted: index ===listView.currentIndex   //当前视图项高亮
-
-            Rectangle{
-                id:itemRec
-                anchors.fill: delegateItem
+            color:index ===listView.currentIndex? "skyblue":"white"  //当前视图项变蓝
+            opacity: 0.8
+            property int preIndex:-1
+            Label{
                 color: "black"
-                opacity: 0.3
+                verticalAlignment: Text.AlignVCenter
+                anchors.fill: parent
+                text: model.title
             }
 
-
-            MouseArea{                                  //通过mousearea完成拖拽排序
-                id:dragArea
-                anchors.fill: parent
-                property int preIndex:-1
-                drag{
-                    target:timer.isPress?  parent:null
-                    axis: Drag.YAxis
-                    threshold: 10
-                }
-                onPressed:{                 //按下鼠标计时器开始计时，并把当前点击项置顶
-                    timer.start()
-                    delegateItem.z=10
-                }
-                onReleased: {               //松开鼠标，计时器结束，判断是否为长按或点击
-                    timer.stop()
-                    if(timer.isPress){
-                        timer.isPress=false
-                        delegateItem.z=0
-                    }else{
+            //鼠标点击时的处理
+            TapHandler{
+                target: parent
+                onTapped: {
+                    if(!itemDrag.active){
                         playlist.currentIndex=index
                     }
-                    delegateItem.y=index*50     //松开后按照当前索引固定位置
                 }
-                Timer{
-                    id:timer
-                    property bool isPress: false
-                    interval: 100
-                    repeat: true
-                    running: false
-
-                    onTriggered:{     //拖拽的初始化
-                        isPress=true
+            }
+            //拖拽实现
+            DragHandler{
+                id:itemDrag
+                target: parent
+                enabled: true
+                xAxis.enabled:false
+                onActiveChanged: {
+                    if(!active){
+                        delegateItem.y=index*50     //松开后按照当前索引固定位置
+                        delegateItem.z=0
+                    }else{
+                        preIndex=index              //拖拽时将当前项置顶
+                        delegateItem.z=listView.z+2
                     }
                 }
-                // 拖拽过程
-                onPositionChanged: {
-                    if (dragArea.drag.active) {
+            }
+
+            //拖拽点移动时执行move函数
+            HoverHandler{
+                id:dragPoint
+                target:parent
+                enabled: itemDrag.active
+                acceptedDevices: PointerDevice.Mouse
+                onPointChanged: {
                         // 计算当前拖拽位置对应的新索引
                         var newIndex = Math.floor((delegateItem.y+delegateItem.height*(1/2))/50)
                         if(newIndex>listView.count-1) newIndex=listView.count-1
@@ -92,9 +84,9 @@ ScrollView {
                             playlist.move(preIndex, newIndex, 1)
                             preIndex = newIndex
                         }
-                    }
                 }
             }
+
         }
     }
 }

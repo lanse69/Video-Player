@@ -30,8 +30,7 @@ Rectangle {
                 }
             }
         }
-
-        // 开始和停止
+        // 播放和停止
         ToolButton {
             id: startandpause
             icon.name: mediaEngine.playing ? "media-playback-pause" : "media-playback-start"

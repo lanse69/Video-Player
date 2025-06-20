@@ -43,7 +43,7 @@ public:
     Q_INVOKABLE QList<QUrl> search(QString text); //按照给定的text筛选title并返回
     Q_INVOKABLE void histroy();                   //初始化历史列表(最多5项)
     Q_INVOKABLE void setHistroy(QUrl url);        //设置历史列表 (最多5项)
-
+    Q_INVOKABLE int indexByUrl(QUrl url);         //通过url寻找对应的下标
     //暴露属性的setter和getter
     int currentIndex() const;
     void setCurrentIndex(int index);

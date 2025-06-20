@@ -28,7 +28,6 @@ qt_add_qml_module(appVideo-Player
     QML_FILES Content.qml
     QML_FILES ControlBar.qml
     RESOURCES resources.qrc
-    RESOURCES histroy.txt
 )
 
 target_compile_features(appVideo-Player PRIVATE cxx_std_23)
@@ -57,8 +56,6 @@ install(TARGETS appVideo-Player
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
-
 
 pkg_check_modules(AVCODEC REQUIRED libavcodec)
 pkg_check_modules(AVFORMAT REQUIRED libavformat)

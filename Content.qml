@@ -5,13 +5,16 @@ import VideoPlayer
 
 Item {
     id:content
-    property alias dialogs: _dialogs
     property MediaEngine mediaEngine
     property PlaylistModel playlistModel
+    property CaptureManager captureManager
+    property alias dialogs: _dialogs
     property alias player: _player
+    property alias controlBar: _controlBar
 
     Dialogs {
         id: _dialogs
+        captureManager: content.captureManager
     }
 
     // 视频播放区域
@@ -134,7 +137,7 @@ Item {
 
     // 控制栏（底部）
     ControlBar {
-        id: controlBar
+        id: _controlBar
         anchors {
             left: parent.left
             right: parent.right
@@ -142,6 +145,7 @@ Item {
         }
         mediaEngine: content.mediaEngine
         playlistModel: content.playlistModel
+        captureManager: content.captureManager
     }
 
     Connections {

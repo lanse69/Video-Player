@@ -8,6 +8,7 @@ Item {
     property alias dialogs: _dialogs
     property MediaEngine mediaEngine
     property PlaylistModel playlistModel
+    property alias player: _player
 
     Dialogs {
         id: _dialogs
@@ -15,7 +16,7 @@ Item {
 
     // 视频播放区域
     Player {
-        id: player
+        id: _player
         anchors.fill: parent
         mediaEngine: content.mediaEngine
 

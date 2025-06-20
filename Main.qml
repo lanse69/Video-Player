@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
 import VideoPlayer
+import QtQuick.Dialogs
 
 ApplicationWindow {
     id: window
@@ -34,6 +35,19 @@ ApplicationWindow {
         }
     }
 
+    // 截图管理器
+    CaptureManager {
+        id: captureManager
+        onScreenshotCaptured: {
+            content.dialogs.previewDialog.captureManager = captureManager
+            content.dialogs.previewDialog.open()
+        }
+        onErrorOccurred: function(error) {
+            content.dialogs.errorDialog.text = error;
+            content.dialogs.errorDialog.open();
+        }
+    }
+
     //历史记录的数据项
     PlaylistModel {
         id: histroyListModel
@@ -41,7 +55,9 @@ ApplicationWindow {
             histroy()
         }
     }
+
     menuBar: MenuBar {
+        id: menu
         Menu {
             title: qsTr("File")
             MenuItem { action: actions.open }
@@ -49,7 +65,7 @@ ApplicationWindow {
             MenuSeparator {}
             MenuItem { action: actions.exit }
             Menu{
-                title: qsTr("最近打开")
+                title: qsTr("Recently Opened")
                 Repeater{
                     model:histroyListModel
                     delegate:MenuItem{
@@ -89,6 +105,37 @@ ApplicationWindow {
             MenuSeparator {}
             MenuItem { action: actions.previous }
             MenuItem { action: actions.next }
+            MenuItem { action: actions.loopPlayback }
+            MenuItem { action: actions.sequentialPlayback }
+            MenuItem { action: actions.randomPlayback }
+        }
+
+        Menu {
+            title: qsTr("View")
+            MenuItem { action: actions.fullScreen }
+            MenuItem { action: actions.exitFullScreen }
+
+            Menu {
+                title: qsTr("Video Scale")
+                MenuItem {
+                       action: actions.originalAspectRatio
+                   }
+                   MenuItem {
+                       action: actions.aspectRatio16_9
+                   }
+                   MenuItem {
+                       action: actions.aspectRatio4_3
+                }
+            }
+        }
+
+        Menu {
+            title: qsTr("Capture")
+            Menu {
+                title: qsTr("Screenshot")
+                MenuItem { action: actions.screenshotWindow }
+                MenuItem { action: actions.screenshotFull }
+            }
         }
 
         Menu {
@@ -105,17 +152,21 @@ ApplicationWindow {
         play.onTriggered: mediaEngine.play()
         pause.onTriggered: mediaEngine.pause()
         stop.onTriggered: mediaEngine.stop()
+
         mute.onTriggered: {
             if (content.mediaEngine) {
                 content.mediaEngine.setMuted(mute.checked)
             }
         }
+
         subtitle.enabled: mediaEngine && mediaEngine.hasSubtitle
+
         subtitle.onTriggered: {
             if (content.mediaEngine) {
                 content.mediaEngine.setSubtitleVisible(subtitle.checked)
             }
         }
+
         previous.onTriggered: {
             if (playlistModel.rowCount > 0) {
                 var newIndex = playlistModel.currentIndex - 1
@@ -123,6 +174,7 @@ ApplicationWindow {
                 playlistModel.currentIndex = newIndex
             }
         }
+
         next.onTriggered: {
             if (playlistModel.rowCount > 0) {
                 var newIndex = playlistModel.currentIndex + 1
@@ -130,11 +182,37 @@ ApplicationWindow {
                 playlistModel.currentIndex = newIndex
             }
         }
+
         aboutQt.onTriggered: content.dialogs.aboutQt.open()
         zeroPointFiveRate.onTriggered: mediaEngine.setPlaybackRate(0.5)
         oneRate.onTriggered: mediaEngine.setPlaybackRate(1)
         onePointFiveRate.onTriggered: mediaEngine.setPlaybackRate(1.5)
         twoRate.onTriggered: mediaEngine.setPlaybackRate(2)
+
+        screenshotWindow.onTriggered: {
+            mediaEngine.pause()
+            window.takeScreenshot(CaptureManager.WindowCapture)
+        }
+
+        screenshotFull.onTriggered: {
+            mediaEngine.pause()
+            window.takeScreenshot(CaptureManager.FullScreenCapture)
+        }
+
+        fullScreen.onTriggered: { // 全屏
+            window.showFullScreen()
+            menu.visible = false
+        }
+
+        exitFullScreen.onTriggered: { // 退出全屏
+            window.showNormal()
+            menu.visible = true
+        }
+
+        loopPlayback.onTriggered: mediaEngine.setLoops(-1)
+        originalAspectRatio.onTriggered: content.player.targetAspectRatio = 0
+        aspectRatio16_9.onTriggered: content.player.targetAspectRatio = 16/9
+        aspectRatio4_3. onTriggered: content.player.targetAspectRatio = 4/3
     }
 
     Content {
@@ -157,5 +235,24 @@ ApplicationWindow {
         mediaEngine.stop()
         playlistModel.clear()
         title = "Video Player"
+    }
+
+    function takeScreenshot(type) {
+        screenshotTimer.type = type
+        screenshotTimer.start()
+    }
+
+    Timer {
+        id: screenshotTimer
+        property int type
+        interval: 50 // 等待50毫秒确保UI更新
+        onTriggered: {
+            if (type === CaptureManager.WindowCapture) {
+                captureManager.captureScreenshot(CaptureManager.WindowCapture)
+            }
+            if (type === CaptureManager.FullScreenCapture) {
+                captureManager.captureScreenshot(CaptureManager.FullScreenCapture)
+            }
+        }
     }
 }

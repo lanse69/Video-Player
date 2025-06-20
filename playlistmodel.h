@@ -20,13 +20,11 @@ class PlaylistModel : public QAbstractListModel
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
-    Q_PROPERTY(
-        int rowCount READ rowCount NOTIFY rowCountChanged)
+    Q_PROPERTY(int rowCount READ rowCount NOTIFY rowCountChanged)
 
 public:
     enum Roles { UrlRole = Qt::UserRole + 1, TitleRole }; //设置UrlRole枚举和TitleRole枚举
-    Q_ENUM(
-        Roles)
+    Q_ENUM(Roles)
 
     explicit PlaylistModel(QObject *parent = nullptr);
 
@@ -49,6 +47,7 @@ public:
     //暴露属性的setter和getter
     int currentIndex() const;
     void setCurrentIndex(int index);
+
 signals:
     //通知属性变化
     void currentIndexChanged(int index);

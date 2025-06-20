@@ -209,7 +209,8 @@ int PlaylistModel::indexByUrl(
         if (m_mediaList[i].url == url)
             return i;
     }
-    return 0;
+    qDebug() << "indexByUrl failed";
+    return -1;
 }
 
 bool PlaylistModel::isMatch(

@@ -7,11 +7,47 @@ Item {
     property MediaEngine mediaEngine
     property bool subtitleVisible: mediaEngine ? mediaEngine.subtitleVisible : true
     property string currentSubtitle: ""
+    property real targetAspectRatio: 0  // 0为原始比例, 16/9为16:9, 4/3为4:3
 
-    VideoOutput {
-        id: videoOutput
-        anchors.fill: parent
-        fillMode: VideoOutput.PreserveAspectFit
+    Item {
+        id: _videoContainer
+        anchors.centerIn: parent
+
+        // 动态计算尺寸
+        width: {
+            if (targetAspectRatio === 0) {
+                // 自动模式：使用视频原始比例或默认16:9
+                var videoRatio = mediaEngine.videoAspectRatio || (16/9)
+                return Math.min(parent.width, parent.height * videoRatio)
+            } else {
+                // 强制比例模式
+                if (parent.width/parent.height > targetAspectRatio) {
+                    return parent.height * targetAspectRatio
+                } else {
+                    return parent.width
+                }
+            }
+        }
+
+        height: {
+            if (targetAspectRatio === 0) {
+                var videoRatio = mediaEngine.videoAspectRatio || (16/9)
+                return Math.min(parent.height, parent.width / videoRatio)
+            } else {
+                if (parent.width/parent.height > targetAspectRatio) {
+                    return parent.height
+                } else {
+                    return parent.width / targetAspectRatio
+                }
+            }
+        }
+
+        // 视频输出（根据模式选择填充方式）
+        VideoOutput {
+            id: videoOutput
+            anchors.fill: parent
+            fillMode: targetAspectRatio === 0 ? VideoOutput.PreserveAspectFit : VideoOutput.Stretch
+        }
     }
 
     // 字幕显示区域
@@ -56,11 +92,7 @@ Item {
 
         function onSubtitleVisibleChanged() {
             subtitleVisible = mediaEngine.subtitleVisible
-            if (mediaEngine.subtitleVisible) {
-                currentSubtitle = mediaEngine.subtitleText
-            } else {
-                currentSubtitle = ""
-            }
+            currentSubtitle = subtitleVisible ? mediaEngine.subtitleText : ""
         }
 
         function onHasSubtitleChanged() {

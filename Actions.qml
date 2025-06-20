@@ -17,6 +17,16 @@ Item {
     property alias oneRate: _oneRate
     property alias onePointFiveRate: _onePointFiveRate
     property alias twoRate: _twoRate
+    property alias screenshotWindow: _screenshotWindow
+    property alias screenshotFull: _screenshotFull
+    property alias fullScreen: _fullScreen
+    property alias exitFullScreen: _exitFullScreen
+    property alias loopPlayback: _loopPlayback
+    property alias sequentialPlayback: _sequentialPlayback
+    property alias randomPlayback: _randomPlayback
+    property alias originalAspectRatio: _originalAspectRatio
+    property alias aspectRatio16_9: _aspectRatio16_9
+    property alias aspectRatio4_3: _aspectRatio4_3
 
     Action {
         id: _open
@@ -107,5 +117,60 @@ Item {
     Action {
         id: _twoRate
         text: qsTr("2x")
+    }
+
+    Action {
+        id: _screenshotWindow
+        text: qsTr("Window")
+        icon.name: "camera-photo"
+    }
+
+    Action {
+        id: _screenshotFull
+        text: qsTr("Full Screen")
+        icon.name: "camera-photo"
+    }
+
+    Action {
+        id: _fullScreen
+        text: qsTr("Full Screen")
+        icon.name: "view-fullscreen"
+        shortcut: "F11"
+    }
+
+    Action {
+        id: _exitFullScreen
+        text: qsTr("Exit Full Screen")
+        shortcut: "Esc"
+    }
+
+    Action {
+        id: _loopPlayback
+        text: qsTr("Loop Playback")
+    }
+
+    Action {
+        id: _sequentialPlayback
+        text: qsTr("Sequential playback")
+    }
+
+    Action {
+        id: _randomPlayback
+        text: qsTr("Random playback")
+    }
+
+    Action {
+        id: _originalAspectRatio
+        text: qsTr("Original")
+    }
+
+    Action {
+        id: _aspectRatio16_9
+        text: qsTr("16:9")
+    }
+
+    Action {
+        id: _aspectRatio4_3
+        text: qsTr("4:3")
     }
 }

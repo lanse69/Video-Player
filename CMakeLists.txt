@@ -4,6 +4,8 @@ project(Video-Player VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_AUTORCC ON)
+
 find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia MultimediaWidgets QuickDialogs2 QuickDialogs2QuickImpl)
 
 qt_standard_project_setup(REQUIRES 6.9)
@@ -17,6 +19,7 @@ qt_add_qml_module(appVideo-Player
         main.cpp
         mediaengine.h mediaengine.cpp
         playlistmodel.h playlistmodel.cpp
+        capturemanager.h capturemanager.cpp
     QML_FILES Main.qml
     QML_FILES Actions.qml
     QML_FILES Dialogs.qml
@@ -24,6 +27,7 @@ qt_add_qml_module(appVideo-Player
     QML_FILES Playlist.qml
     QML_FILES Content.qml
     QML_FILES ControlBar.qml
+    RESOURCES resources.qrc
 )
 
 target_compile_features(appVideo-Player PRIVATE cxx_std_23)

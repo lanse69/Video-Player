@@ -5,6 +5,7 @@ import QtQuick.Layouts
 Rectangle {
     property MediaEngine mediaEngine
     property PlaylistModel playlistModel
+
     height: 50
     width: parent.width
     color: "#66000000"
@@ -16,6 +17,7 @@ Rectangle {
         anchors.margins: 10
 
         // 播放控制按钮
+        // 上一个
         ToolButton {
             icon.name: "media-seek-backward-symbolic"
             onClicked: {
@@ -26,6 +28,7 @@ Rectangle {
                 }
             }
         }
+        // 播放和停止
         ToolButton {
             id: startandpause
             icon.name: mediaEngine.playing ? "media-playback-pause" : "media-playback-start"
@@ -36,6 +39,7 @@ Rectangle {
             }
         }
 
+        // 停止播放，并将播放位置重置为起始位置
         ToolButton {
             icon.name: "media-playback-stop-symbolic"
             onClicked:
@@ -44,6 +48,7 @@ Rectangle {
                 }
         }
 
+        // 下一个
         ToolButton {
             icon.name: "media-seek-forward-symbolic"
             onClicked: {
@@ -62,7 +67,7 @@ Rectangle {
             from: 0
             to: mediaEngine ? mediaEngine.duration : 0
 
-            property bool isDragging: false // 是否拖拽
+            property bool isDragging: false // 是否在拖拽
             property real dragValue: 0
 
             value: {
@@ -77,6 +82,7 @@ Rectangle {
                 if (pressed) { // 开始拖拽
                     isDragging = true
                     dragValue = value
+                    thumbnailPopup.open()
                 } else { // 结束拖拽
                     isDragging = false
                     if (mediaEngine) {
@@ -88,41 +94,26 @@ Rectangle {
 
             onMoved: {
                 if (isDragging) {
-                    dragValue = position * to
+                    dragValue = positionSlider.value
                 }
             }
 
             // 缩略图弹出窗口
             Popup {
                 id: thumbnailPopup
+                parent: positionSlider.handle
+                visible: positionSlider.pressed
                 y: -height - 10
-                x: Math.min(Math.max(positionSlider.handle.x - width/2 + positionSlider.handle.width/2, 0),
-                          positionSlider.width - width)
+                x: -width / 2
                 width: 160
                 height: 90
-                padding: 0
-                closePolicy: Popup.NoAutoClose
-                visible: positionSlider.pressed && thumbnailImage.source !== ""
-
-                Image {
-                    id: thumbnailImage
-                    anchors.fill: parent
-                    anchors.margins: 2
-                    fillMode: Image.PreserveAspectFit
-                    cache: false
-                    asynchronous: true
-                    source: ""
-                }
+                closePolicy: Popup.CloseOnReleaseOutside
 
                 // 显示时间
                 Label {
                     anchors.bottom: parent.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottomMargin: 4
                     color: "white"
-                    style: Text.Outline
-                    styleColor: "black"
-                    font.pixelSize: 12
                     text: formatTime(Math.floor(positionSlider.dragValue / 1000))
 
                     function formatTime(seconds) {
@@ -131,7 +122,7 @@ Rectangle {
                         return minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0')
                     }
                 }
-            }
+           }
         }
 
         // 时间显示
@@ -166,18 +157,13 @@ Rectangle {
                 id: rateSelectionPopup
                 y: -height - 10
                 x: (rateButton.width - width) / 2
-                width: 100
-                height: rateSelectionColumn.height + 20
-                padding: 10
 
                 background: Rectangle {
                     color: "#66000000"
-                    radius: 10
                 }
 
                 ColumnLayout {
                     id: rateSelectionColumn
-                    width: parent.width
 
                     Button {
                         text: "0.5x"

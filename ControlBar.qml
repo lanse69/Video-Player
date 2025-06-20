@@ -61,6 +61,63 @@ Rectangle {
             }
         }
 
+        ToolButton {
+            id: playbackModeButton
+            text: {
+                switch (mediaEngine.playbackMode) {
+                case MediaEngine.Sequential: // 顺序播放
+                    return "Seqential"
+                case MediaEngine.Random: // 随机播放
+                    return "Random"
+                case MediaEngine.Loop: // 循环播放
+                    return "Loop"
+                default:
+                    break;
+                }
+            }
+
+            onClicked: {
+                playbackModeSelectionPopup.open()
+            }
+
+            // 播放模式选择窗口
+            Popup {
+                id: playbackModeSelectionPopup
+                y: -height - 10
+                x: (playbackModeButton.width - width) / 2
+                background: Rectangle {
+                    color: "#66000000"
+                }
+
+                ColumnLayout {
+                    id: playbackModeSelectionColumn
+                    Button {
+                        text: qsTr("Seqential")
+                        onClicked: {
+                            mediaEngine.setPlaybackMode(MediaEngine.Sequential)
+                            playbackModeSelectionPopup.close()
+                        }
+                    }
+
+                    Button {
+                        text: qsTr("Loop")
+                        onClicked: {
+                            mediaEngine.setPlaybackMode(MediaEngine.Loop)
+                            playbackModeSelectionPopup.close()
+                        }
+                    }
+
+                    Button {
+                        text: qsTr("Random")
+                        onClicked: {
+                            mediaEngine.setPlaybackMode(MediaEngine.Random)
+                            playbackModeSelectionPopup.close()
+                        }
+                    }
+                }
+            }
+        }
+
         // 进度条
         Slider {
             id: positionSlider
@@ -148,7 +205,6 @@ Rectangle {
         ToolButton {
             id: rateButton
             text: mediaEngine ? mediaEngine.playbackRate + "x" : "1.0x"
-
             onClicked: {
                 rateSelectionPopup.open()
             }
@@ -158,11 +214,9 @@ Rectangle {
                 id: rateSelectionPopup
                 y: -height - 10
                 x: (rateButton.width - width) / 2
-
                 background: Rectangle {
                     color: "#66000000"
                 }
-
                 ColumnLayout {
                     id: rateSelectionColumn
 

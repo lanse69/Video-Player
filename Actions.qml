@@ -147,16 +147,19 @@ Item {
     Action {
         id: _loopPlayback
         text: qsTr("Loop Playback")
+        icon.name: "media-playlist-repeat-symbolic"
     }
 
     Action {
         id: _sequentialPlayback
         text: qsTr("Sequential playback")
+        icon.name: "media-playlist-normal"
     }
 
     Action {
         id: _randomPlayback
         text: qsTr("Random playback")
+        icon.name: "media-playlist-shuffle"
     }
 
     Action {

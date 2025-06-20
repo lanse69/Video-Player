@@ -117,15 +117,9 @@ ApplicationWindow {
 
             Menu {
                 title: qsTr("Video Scale")
-                MenuItem {
-                       action: actions.originalAspectRatio
-                   }
-                   MenuItem {
-                       action: actions.aspectRatio16_9
-                   }
-                   MenuItem {
-                       action: actions.aspectRatio4_3
-                }
+                MenuItem { action: actions.originalAspectRatio }
+                MenuItem { action: actions.aspectRatio16_9 }
+                MenuItem { action: actions.aspectRatio4_3 }
             }
         }
 
@@ -209,7 +203,9 @@ ApplicationWindow {
             menu.visible = true
         }
 
-        loopPlayback.onTriggered: mediaEngine.setLoops(-1)
+        loopPlayback.onTriggered: mediaEngine.setPlaybackMode(MediaEngine.Loop)
+        sequentialPlayback.onTriggered: mediaEngine.setPlaybackMode(MediaEngine.Sequential)
+        randomPlayback.onTriggered: mediaEngine.setPlaybackMode(MediaEngine.Random)
         originalAspectRatio.onTriggered: content.player.targetAspectRatio = 0
         aspectRatio16_9.onTriggered: content.player.targetAspectRatio = 16/9
         aspectRatio4_3. onTriggered: content.player.targetAspectRatio = 4/3
@@ -220,6 +216,19 @@ ApplicationWindow {
         anchors.fill: parent
         mediaEngine: mediaEngine
         playlistModel: playlistModel
+
+        // 双击全屏
+        TapHandler {
+            onDoubleTapped: {
+                if (window.visibility === ApplicationWindow.FullScreen) {
+                    window.showNormal()
+                    menuBar.visible = true  // 退出全屏时显示菜单栏
+                } else {
+                    window.showFullScreen()
+                    menuBar.visible = false // 进入全屏时隐藏菜单栏
+                }
+            }
+        }
     }
 
     Connections {
@@ -228,6 +237,31 @@ ApplicationWindow {
         function onHasSubtitleChanged() {
             actions.subtitle.enabled = mediaEngine.hasSubtitle
             actions.subtitle.checked = mediaEngine.subtitleVisible
+        }
+
+        function onPlaybackFinishedChanged() {
+            if (mediaEngine.playbackFinished) { // 检查视频结束
+                switch(mediaEngine.playbackMode) { // 检查视频的播放模式
+                    case MediaEngine.Sequential: // 顺序播放
+                        var newIndex = playlistModel.currentIndex + 1;
+                        if (newIndex > 0 && newIndex < playlistModel.rowCount) {
+                            playlistModel.currentIndex = newIndex;
+                        }
+                        break;
+                    case MediaEngine.Random: // 随机播放
+                        var count = playlistModel.rowCount
+                        if (count > 1) {
+                            var index = playlistModel.getRandomIndex(0, count)
+                            playlistModel.currentIndex = index
+                        }
+                        break;
+                    case MediaEngine.Loop: // 循环播放
+                        playlistModel.currentIndex = playlistModel.currentIndex
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
     }
 
@@ -255,4 +289,33 @@ ApplicationWindow {
             }
         }
     }
+
+    // Connections {
+    //     target: mediaEngine
+
+    //     function onPlaybackFinishedChanged() {
+    //         if (mediaEngine.playbackFinished) { // 检查视频结束
+    //             switch(mediaEngine.playbackMode) { // 检查视频的播放模式
+    //                 case MediaEngine.Sequential: // 顺序播放
+    //                     var newIndex = playlistModel.currentIndex + 1;
+    //                     if (newIndex > 0 && newIndex < playlistModel.rowCount) {
+    //                         playlistModel.currentIndex = newIndex;
+    //                     }
+    //                     break;
+    //                 case MediaEngine.Random: // 随机播放
+    //                     var count = playlistModel.rowCount
+    //                     if (count > 2) {
+    //                         var index = playlistModel.getRandomIndex(0, count)
+    //                         playlistModel.currentIndex = index
+    //                     }
+    //                     break;
+    //                 case MediaEngine.Loop: // 循环播放
+    //                     playlistModel.currentIndex = playlistModel.currentIndex
+    //                     break;
+    //                 default:
+    //                     break;
+    //             }
+    //         }
+    //     }
+    // }
 }

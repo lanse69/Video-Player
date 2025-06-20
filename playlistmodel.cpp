@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QFileInfo>
 #include <QFile>
+#include <QRandomGenerator>
 
 PlaylistModel::PlaylistModel(QObject *parent) : QAbstractListModel(parent) {}
 
@@ -285,4 +286,15 @@ QString PlaylistModel::getTitleByFF(
 
     avformat_close_input(&fmt_ctx);
     return ans;
+}
+
+int PlaylistModel::getRandomIndex(int min, int max) const
+{
+    if (max < 2) return 0;
+    int newIndex;
+    do {
+        newIndex = QRandomGenerator::global()->bounded(min, max);
+    } while (newIndex == m_currentIndex);
+
+    return newIndex;
 }

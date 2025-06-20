@@ -20,21 +20,21 @@ Item {
         mediaEngine: content.mediaEngine
 
         // 鼠标区域控制控制栏和列表显示
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
+        HoverHandler {
+            id:mouseHover
+            acceptedDevices: PointerDevice.Mouse
+            target: parent
 
+            onPointChanged: {
+                    // 当鼠标靠近右侧时显示播放列表
+                    playlist.visible = (point.position.x > parent.width *(3/4))&&!searchList.visible&&searchBox.length===0
+                    searchBox.visible=(point.position.x > parent.width *(3/4))
+                    searchList.visible=(point.position.x > parent.width *(3/4))&&!playlist.visible&&searchBox.length!==0
+                    playlistcurtain.visible=(point.position.x > parent.width *(3/4))
+                    // 当鼠标靠近底部时显示控制栏
+                    controlBar.visible = (point.position.y > parent.height - 100)
 
-            onPositionChanged: {
-                // 当鼠标靠近右侧时显示播放列表
-                playlist.visible = (mouseX > parent.width *(3/4))&&!searchList.visible&&searchBox.length===0
-                searchBox.visible=(mouseX > parent.width *(3/4))
-                searchList.visible=(mouseX > parent.width *(3/4))&&!playlist.visible&&searchBox.length!==0
-                playlistcurtain.visible=(mouseX > parent.width *(3/4))
-                // 当鼠标靠近底部时显示控制栏
-                controlBar.visible = (mouseY > parent.height - 100)
             }
-
         }
     }
 
@@ -44,6 +44,7 @@ Item {
         anchors.top: parent.top
         width: playlist.width
         anchors.right: parent.right
+        visible: false
         height: 30
         placeholderText: "请输入搜索内容(限10字)"
         placeholderTextColor: "gray"

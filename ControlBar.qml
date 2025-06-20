@@ -26,7 +26,6 @@ Rectangle {
                 }
             }
         }
-
         ToolButton {
             id: startandpause
             icon.name: mediaEngine.playing ? "media-playback-pause" : "media-playback-start"

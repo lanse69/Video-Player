@@ -24,12 +24,6 @@ qt_add_qml_module(appVideo-Player
     QML_FILES Playlist.qml
     QML_FILES Content.qml
     QML_FILES ControlBar.qml
-    QML_FILES
-    QML_FILES
-    RESOURCES
-    SOURCES
-    RESOURCES
-    RESOURCES histroy.txt
 )
 
 target_compile_features(appVideo-Player PRIVATE cxx_std_23)

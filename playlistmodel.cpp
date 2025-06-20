@@ -115,7 +115,7 @@ void PlaylistModel::move(
 
     m_mediaList.remove(preIndex, num); //将已存入的元素删除
     // 插入元素到新位置
-    for (int i = 0; i < num; ++i) {
+    for (int i = 0; i < num; i++) {
         m_mediaList.insert(newIndex, movingItems[i]);
     }
     endMoveRows();
@@ -209,6 +209,7 @@ int PlaylistModel::indexByUrl(
         if (m_mediaList[i].url == url)
             return i;
     }
+    return 0;
 }
 
 bool PlaylistModel::isMatch(

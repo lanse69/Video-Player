@@ -11,9 +11,12 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QIcon>
+// #include <QProcessEnvironment>
 
 int main(int argc, char *argv[])
 {
+    // qputenv("QT_FFMPEG_VAAPI", "0"); // 禁用 VAAPI
+
     QGuiApplication app(argc, argv);
     app.setWindowIcon(QIcon(":/icons/folder-videos.svg"));
     app.setApplicationName("Video Player");

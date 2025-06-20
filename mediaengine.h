@@ -113,6 +113,6 @@ private:
     bool m_subtitleVisible;
     QMap<qint64, QPair<qint64, QString>> m_subtitles;
     bool m_userMutedSubtitle;
-    PlaybackMode m_playbackMode = Sequential; // 播放模式
+    PlaybackMode m_playbackMode = Sequential; // 视频播放模式
     bool m_playbackFinished = false;          // 视频是否结束
 };

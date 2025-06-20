@@ -3,12 +3,15 @@ import QtCore
 import QtQuick.Dialogs
 import QtQuick.Controls
 import QtQuick.Layouts
+import VideoPlayer
 
 Item {
+    property CaptureManager captureManager
     property alias fileOpen: _fileOpen
     property alias aboutQt: _aboutQt
     property alias previewDialog: _previewDialog
     property alias errorDialog: _errorDialog
+    property alias saveLocationDialog: _saveLocationDialog
 
     FileDialog {
         id: _fileOpen
@@ -31,9 +34,6 @@ Item {
 
     Dialog {
         id: _previewDialog
-
-        property CaptureManager captureManager
-
         title: "Screenshot Preview"
         modal: true
         standardButtons: Dialog.Save | Dialog.Discard
@@ -60,14 +60,14 @@ Item {
             defaultSuffix: "png"
 
             property string captureDir: captureManager ?
-                        "file://" + captureManager.generateFilePath() : ""
+                        "file://" + captureManager.generateFilePath(CaptureManager.Screenshot) : ""
 
             currentFolder: captureDir
             selectedFile: captureDir + "/screenshot_" +
                                 Qt.formatDateTime(new Date(), "yyyyMMdd_hhmmss") + ".png"
 
             onAccepted: {
-                if (_previewDialog.captureManager.saveScreenshot(selectedFile)) {
+                if (captureManager.saveScreenshot(selectedFile)) {
                     _previewDialog.close();
                 } else {
                     _errorDialog.text = "Failed to save file";
@@ -77,7 +77,7 @@ Item {
         }
 
         onOpened: {
-            previewImage.source = _previewDialog.captureManager ? _previewDialog.captureManager.previewUrl() : ""
+            previewImage.source = captureManager ? captureManager.previewUrl() : ""
         }
 
         onAccepted: {
@@ -95,5 +95,75 @@ Item {
         id: _errorDialog
         title: "Error"
         buttons: MessageDialog.Ok
+    }
+
+    Dialog {
+        id: _saveLocationDialog
+        title: "截图与录屏保存位置"
+        width: 500
+        height: 300
+        modal: true
+        standardButtons: Dialog.Close
+
+        ColumnLayout {
+            width: parent.width
+            spacing: 15
+
+            // 截图路径
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 5
+
+                Label {
+                    text: "截图保存位置:"
+                    font.bold: true
+                    color: "#3498db"
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 40
+                    color: "#f5f5f5"
+                    radius: 5
+                    border.color: "#ddd"
+
+                    Label {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        text: captureManager ? captureManager.generateFilePath(CaptureManager.Screenshot) : ""
+                        elide: Text.ElideMiddle
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
+
+            // 录屏路径
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 5
+
+                Label {
+                    text: "录屏保存位置:"
+                    font.bold: true
+                    color: "#e74c3c"
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 40
+                    color: "#f5f5f5"
+                    radius: 5
+                    border.color: "#ddd"
+
+                    Label {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        text: captureManager ? captureManager.generateFilePath(CaptureManager.Record) : ""
+                        elide: Text.ElideMiddle
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
+        }
     }
 }

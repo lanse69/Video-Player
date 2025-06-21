@@ -152,7 +152,8 @@ void PlaylistModel::histroy()
         QTextStream in(&file);
         while (!in.atEnd()) {
             QString line = in.readLine().trimmed();
-            readFile.append(QUrl(line));
+            if (QFile::exists(QUrl(line).toLocalFile()))
+                readFile.append(QUrl(line));
         }
         file.close();
     } else {
@@ -255,12 +256,14 @@ int PlaylistModel::currentIndex() const
 
 void PlaylistModel::setCurrentIndex(int index)
 {
+    int preIndex = m_currentIndex;
     if (index < -1 || index >= m_mediaList.size()) {
         qDebug() << "currentIndex change failed\n";
         return;
     }
     m_currentIndex = index;
-    emit currentIndexChanged(m_currentIndex);
+    if (m_currentIndex != preIndex)
+        emit currentIndexChanged(m_currentIndex);
 }
 
 QString PlaylistModel::getTitleByFF(
@@ -274,15 +277,14 @@ QString PlaylistModel::getTitleByFF(
     //初始化AVFormatContext
     if (avformat_open_input(&fmt_ctx, fileName, NULL, NULL) < 0) {
         av_log(NULL, AV_LOG_ERROR, "avformat_open_input failed\n");
-        avformat_close_input(&fmt_ctx);
-        ans = "";
+        return ans;
     }
 
     //从流中获取信息到AVFormatContext中
     if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
         av_log(NULL, AV_LOG_ERROR, "avformat_find_stream_info failed\n");
         avformat_close_input(&fmt_ctx);
-        ans = "";
+        return ans;
     }
 
     //从AVFormatContext中获取标题

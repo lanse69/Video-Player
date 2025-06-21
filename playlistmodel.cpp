@@ -4,16 +4,9 @@
 #include <QFile>
 #include <QRandomGenerator>
 
-// 添加全局初始化标志
-static bool ffmpeg_initialized = false;
-
 PlaylistModel::PlaylistModel(QObject *parent) : QAbstractListModel(parent)
 {
-    // 初始化FFmpeg库
-    if (!ffmpeg_initialized) {
-        avformat_network_init();
-        ffmpeg_initialized = true;
-    }
+    avformat_network_init();
 }
 
 int PlaylistModel::rowCount(const QModelIndex &parent) const
@@ -163,7 +156,8 @@ void PlaylistModel::histroy()
         QTextStream in(&file);
         while (!in.atEnd()) {
             QString line = in.readLine().trimmed();
-            readFile.append(QUrl(line));
+            if (QFile::exists(QUrl(line).toLocalFile()))
+                readFile.append(QUrl(line));
         }
         file.close();
     } else {
@@ -265,47 +259,18 @@ int PlaylistModel::currentIndex() const
 
 void PlaylistModel::setCurrentIndex(int index)
 {
+    int preIndex = m_currentIndex;
     if (index < -1 || index >= m_mediaList.size()) {
         qDebug() << "currentIndex change failed\n";
         return;
     }
     m_currentIndex = index;
-    emit currentIndexChanged(m_currentIndex);
+    if (m_currentIndex != preIndex)
+        emit currentIndexChanged(m_currentIndex);
 }
 
 QString PlaylistModel::getTitleByFF(QUrl url) const
 {
-    // QByteArray utf8 = url.toString().toUtf8();
-    // const char *fileName = utf8.constData();
-    // AVFormatContext *fmt_ctx = NULL;
-    // QString ans{};
-
-    // //初始化AVFormatContext
-    // if (avformat_open_input(&fmt_ctx, fileName, NULL, NULL) < 0) {
-    //     av_log(NULL, AV_LOG_ERROR, "avformat_open_input failed\n");
-    //     avformat_close_input(&fmt_ctx);
-    //     ans = "";
-    // }
-
-    // //从流中获取信息到AVFormatContext中
-    // if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
-    //     av_log(NULL, AV_LOG_ERROR, "avformat_find_stream_info failed\n");
-    //     avformat_close_input(&fmt_ctx);
-    //     ans = "";
-    // }
-
-    // //从AVFormatContext中获取标题
-    // AVDictionaryEntry *tag = NULL;
-    // tag = av_dict_get(fmt_ctx->metadata, "title", NULL, 0);
-    // if (tag) {
-    //     ans = QString(tag->value); // 输出标题
-    // } else {
-    //     ans = "";
-    // }
-
-    // avformat_close_input(&fmt_ctx);
-    // return ans;
-
     QString localPath = url.toLocalFile(); // 获取本地文件路径
     if (localPath.isEmpty()) return "";
 
@@ -316,15 +281,15 @@ QString PlaylistModel::getTitleByFF(QUrl url) const
 
     // 打开媒体文件
     if (avformat_open_input(&fmt_ctx, fileName, NULL, NULL) < 0) {
-        qDebug() << "avformat_open_input failed for:" << localPath;
-        return ""; // 直接返回空字符串，不尝试关闭NULL上下文
+        av_log(NULL, AV_LOG_ERROR, "avformat_open_input failed\n");
+        return ans;
     }
 
     // 获取流信息
     if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
-        qDebug() << "avformat_find_stream_info failed for:" << localPath;
-        avformat_close_input(&fmt_ctx); // 关闭已打开的文件
-        return "";
+        av_log(NULL, AV_LOG_ERROR, "avformat_find_stream_info failed\n");
+        avformat_close_input(&fmt_ctx);
+        return ans;
     }
 
     // 获取标题元数据

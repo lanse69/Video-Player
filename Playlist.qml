@@ -57,6 +57,8 @@ ScrollView {
                 target: parent
                 enabled: true
                 xAxis.enabled:false
+                yAxis.minimum: 0
+                yAxis.maximum: (listView.count-1)*50
                 onActiveChanged: {
                     if(!active){
                         delegateItem.y=index*50     //松开后按照当前索引固定位置

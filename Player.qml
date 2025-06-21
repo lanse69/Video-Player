@@ -13,15 +13,12 @@ Item {
         id: _videoContainer
         anchors.centerIn: parent
 
-        // 动态计算尺寸
+        // 计算尺寸
         width: {
             if (targetAspectRatio === 0) {
-                // 自动模式：使用视频原始比例或默认16:9
-                var videoRatio = mediaEngine.videoAspectRatio || (16/9)
-                return Math.min(parent.width, parent.height * videoRatio)
+                return parent.width
             } else {
-                // 强制比例模式
-                if (parent.width/parent.height > targetAspectRatio) {
+                if (parent.width / parent.height > targetAspectRatio) { // 如果父容器更宽，按高度计算宽度
                     return parent.height * targetAspectRatio
                 } else {
                     return parent.width
@@ -31,10 +28,9 @@ Item {
 
         height: {
             if (targetAspectRatio === 0) {
-                var videoRatio = mediaEngine.videoAspectRatio || (16/9)
-                return Math.min(parent.height, parent.width / videoRatio)
+                return parent.height
             } else {
-                if (parent.width/parent.height > targetAspectRatio) {
+                if (parent.width / parent.height > targetAspectRatio) { // 如果父容器更宽，直接使用父容器的全部高度
                     return parent.height
                 } else {
                     return parent.width / targetAspectRatio

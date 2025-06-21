@@ -44,6 +44,8 @@ public:
     Q_INVOKABLE void histroy();                   //初始化历史列表(最多5项)
     Q_INVOKABLE void setHistroy(QUrl url);        //设置历史列表 (最多5项)
     Q_INVOKABLE int indexByUrl(QUrl url);         //通过url寻找对应的下标
+    Q_INVOKABLE int getRandomIndex(int min, int max) const; // 生成随机下标
+
     //暴露属性的setter和getter
     int currentIndex() const;
     void setCurrentIndex(int index);

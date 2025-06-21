@@ -8,6 +8,7 @@
 #include <QVideoSink>
 #include <QMap>
 #include <QPair>
+#include <playlistmodel.h>
 
 class MediaEngine : public QObject
 {
@@ -26,12 +27,26 @@ class MediaEngine : public QObject
                    subtitleVisibleChanged) // 是否展示字幕
     Q_PROPERTY(bool userMutedSubtitle READ userMutedSubtitle WRITE setUserMutedSubtitle NOTIFY
                    userMutedSubtitleChanged) //用户对字幕的开关
-    Q_PROPERTY(qreal playbackRate READ playbackRate WRITE setPlaybackRate NOTIFY playbackRateChanged) // 播放速率
-    Q_PROPERTY(int loops READ loops WRITE setLoops NOTIFY loopsChanged FINAL)                         // 循环播放
-    Q_PROPERTY(qreal videoAspectRatio READ videoAspectRatio NOTIFY videoAspectRatioChanged)           // 视频宽高比
+
+    // 播放速率
+    Q_PROPERTY(qreal playbackRate READ playbackRate WRITE setPlaybackRate NOTIFY playbackRateChanged)
+    Q_PROPERTY(qreal videoAspectRatio READ videoAspectRatio NOTIFY videoAspectRatioChanged) // 视频宽高比
+
+    // 视频播放模式
+    Q_PROPERTY(PlaybackMode playbackMode READ playbackMode WRITE setPlaybackMode NOTIFY playbackModeChanged)
+
+    // 视频是否结束
+    Q_PROPERTY(bool playbackFinished READ playbackFinished WRITE setPlaybackFinished NOTIFY playbackFinishedChanged)
 
 public:
     explicit MediaEngine(QObject *parent = nullptr);
+
+    enum PlaybackMode {
+        Sequential, // 顺序播放
+        Loop,       // 循环播放
+        Random      // 随机播放
+    };
+    Q_ENUM(PlaybackMode)
 
     QVideoSink *videoSink() const;
     bool isPlaying() const;
@@ -47,8 +62,9 @@ public:
     void setUserMutedSubtitle(bool muted);
     void updateSubtitleState();
     qreal playbackRate() const; // 返回播放速率
-    int loops() const;          // 返回1播放一次，返回-1循环播放
     qreal videoAspectRatio() const; // 返回视频的宽高比
+    PlaybackMode playbackMode() const;         // 返回视频播放模式
+    Q_INVOKABLE bool playbackFinished() const; // 返回视频是否结束
 
     Q_INVOKABLE void play();
     Q_INVOKABLE void pause();
@@ -61,7 +77,8 @@ public:
     Q_INVOKABLE void loadSubtitle(const QUrl &mediaUrl);
     Q_INVOKABLE void setSubtitleVisible(bool visible);
     Q_INVOKABLE void setPlaybackRate(qreal rate); // 设置播放速率
-    Q_INVOKABLE void setLoops(int loops);         // 设置循环播放
+    Q_INVOKABLE void setPlaybackMode(PlaybackMode mode); // 设置视频播放模式
+    Q_INVOKABLE void setPlaybackFinished(bool finished); // 设置视频是否结束属性
 
 signals:
     void videoSinkChanged();
@@ -78,8 +95,9 @@ signals:
     void subtitleVisibleChanged();   // 字幕可见性变化
     void userMutedSubtitleChanged(); // 用户改变字幕出现
     void playbackRateChanged();      // 播放速率变化
-    void loopsChanged();             // 循环状态变化
     void videoAspectRatioChanged();  // 视频宽高比变化
+    void playbackModeChanged();      // 播放模式改变
+    void playbackFinishedChanged();  // 视频是否结束改变
 
 private:
     void parseLrcFile(const QString &filePath);
@@ -95,4 +113,6 @@ private:
     bool m_subtitleVisible;
     QMap<qint64, QPair<qint64, QString>> m_subtitles;
     bool m_userMutedSubtitle;
+    PlaybackMode m_playbackMode = Sequential; // 视频播放模式
+    bool m_playbackFinished = false;          // 视频是否结束
 };

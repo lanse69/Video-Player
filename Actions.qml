@@ -19,6 +19,11 @@ Item {
     property alias twoRate: _twoRate
     property alias screenshotWindow: _screenshotWindow
     property alias screenshotFull: _screenshotFull
+    property alias recordWindow: _recordWindow
+    property alias recordFull: _recordFull
+    property alias pauseRecord: _pauseRecord
+    property alias stopRecord: _stopRecord
+    property alias saveLocation: _saveLocation
     property alias fullScreen: _fullScreen
     property alias exitFullScreen: _exitFullScreen
     property alias loopPlayback: _loopPlayback
@@ -122,13 +127,47 @@ Item {
     Action {
         id: _screenshotWindow
         text: qsTr("Window")
-        icon.name: "camera-photo"
+        icon.name: "preferences-system-windows-effect-screenshot"
     }
 
     Action {
         id: _screenshotFull
         text: qsTr("Full Screen")
-        icon.name: "camera-photo"
+        icon.name: "preferences-system-windows-effect-screenshot"
+    }
+
+    Action {
+        id: _recordWindow
+        text: qsTr("Record &Window")
+        icon.name: "applications-multimedia-symbolic"
+    }
+
+    Action {
+        id: _recordFull
+        text: qsTr("Record &Full Screen")
+        icon.name: "applications-multimedia-symbolic"
+    }
+
+    Action {
+        id: _pauseRecord
+        text: qsTr("&Pause Recording")
+        icon.name: "media-playback-pause"
+        enabled: false
+        checkable: true
+    }
+
+    Action {
+        id: _stopRecord
+        text: qsTr("&Stop Recording")
+        icon.name: "media-playback-stop"
+        enabled: false
+    }
+
+    Action {
+        id: _saveLocation
+        text: qsTr("Save Location")
+        icon.name: "folder-black"
+        shortcut: "Ctrl+L"
     }
 
     Action {
@@ -147,16 +186,19 @@ Item {
     Action {
         id: _loopPlayback
         text: qsTr("Loop Playback")
+        icon.name: "media-playlist-repeat-symbolic"
     }
 
     Action {
         id: _sequentialPlayback
         text: qsTr("Sequential playback")
+        icon.name: "media-playlist-normal"
     }
 
     Action {
         id: _randomPlayback
         text: qsTr("Random playback")
+        icon.name: "media-playlist-shuffle"
     }
 
     Action {

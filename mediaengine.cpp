@@ -41,6 +41,11 @@ MediaEngine::MediaEngine(QObject *parent)
 
     // 连接播放速率信号
     connect(m_player, &QMediaPlayer::playbackRateChanged, this, &MediaEngine::playbackRateChanged);
+
+    // 检查视频是否结束
+    connect(m_player, &QMediaPlayer::positionChanged, this, [this](qint64 position) {
+        if (position > 0 && position == m_player->duration()) { setPlaybackFinished(true); }
+    });
 }
 
 QVideoSink *MediaEngine::videoSink() const
@@ -402,21 +407,6 @@ void MediaEngine::setPlaybackRate(qreal rate)
     emit playbackRateChanged();
 }
 
-int MediaEngine::loops() const
-{
-    return m_player->loops();
-}
-
-void MediaEngine::setLoops(int loops)
-{
-    if (loops == 1 || loops == -1) { // loops的值只有-1和1
-        if (loops != m_player->loops()) {
-            m_player->setLoops(loops);
-            emit loopsChanged();
-        }
-    }
-}
-
 qreal MediaEngine::videoAspectRatio() const
 {
     if (m_player->videoOutput()) {
@@ -425,4 +415,28 @@ qreal MediaEngine::videoAspectRatio() const
         if (size.isValid()) return qreal(size.width() / size.height());
     }
     return 0;
+}
+
+MediaEngine::PlaybackMode MediaEngine::playbackMode() const
+{
+    return m_playbackMode;
+}
+
+void MediaEngine::setPlaybackMode(PlaybackMode mode)
+{
+    if (mode != m_playbackMode) {
+        m_playbackMode = mode;
+        emit playbackModeChanged();
+    }
+}
+
+bool MediaEngine::playbackFinished() const
+{
+    return m_playbackFinished;
+}
+
+void MediaEngine::setPlaybackFinished(bool finished)
+{
+    m_playbackFinished = finished;
+    emit playbackFinishedChanged();
 }

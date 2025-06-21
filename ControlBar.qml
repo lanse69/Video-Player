@@ -5,6 +5,8 @@ import QtQuick.Layouts
 Rectangle {
     property MediaEngine mediaEngine
     property PlaylistModel playlistModel
+    property CaptureManager captureManager
+    property alias recordTimeText: _recordTimeText
 
     height: 50
     width: parent.width
@@ -56,6 +58,63 @@ Rectangle {
                     var newIndex = playlistModel.currentIndex + 1
                     if (newIndex >= playlistModel.rowCount) newIndex = 0
                     playlistModel.currentIndex = newIndex
+                }
+            }
+        }
+
+        ToolButton {
+            id: playbackModeButton
+            text: {
+                switch (mediaEngine.playbackMode) {
+                case MediaEngine.Sequential: // 顺序播放
+                    return "Seqential"
+                case MediaEngine.Random: // 随机播放
+                    return "Random"
+                case MediaEngine.Loop: // 循环播放
+                    return "Loop"
+                default:
+                    break;
+                }
+            }
+
+            onClicked: {
+                playbackModeSelectionPopup.open()
+            }
+
+            // 播放模式选择窗口
+            Popup {
+                id: playbackModeSelectionPopup
+                y: -height - 10
+                x: (playbackModeButton.width - width) / 2
+                background: Rectangle {
+                    color: "#66000000"
+                }
+
+                ColumnLayout {
+                    id: playbackModeSelectionColumn
+                    Button {
+                        text: qsTr("Seqential")
+                        onClicked: {
+                            mediaEngine.setPlaybackMode(MediaEngine.Sequential)
+                            playbackModeSelectionPopup.close()
+                        }
+                    }
+
+                    Button {
+                        text: qsTr("Loop")
+                        onClicked: {
+                            mediaEngine.setPlaybackMode(MediaEngine.Loop)
+                            playbackModeSelectionPopup.close()
+                        }
+                    }
+
+                    Button {
+                        text: qsTr("Random")
+                        onClicked: {
+                            mediaEngine.setPlaybackMode(MediaEngine.Random)
+                            playbackModeSelectionPopup.close()
+                        }
+                    }
                 }
             }
         }
@@ -147,7 +206,6 @@ Rectangle {
         ToolButton {
             id: rateButton
             text: mediaEngine ? mediaEngine.playbackRate + "x" : "1.0x"
-
             onClicked: {
                 rateSelectionPopup.open()
             }
@@ -157,11 +215,9 @@ Rectangle {
                 id: rateSelectionPopup
                 y: -height - 10
                 x: (rateButton.width - width) / 2
-
                 background: Rectangle {
                     color: "#66000000"
                 }
-
                 ColumnLayout {
                     id: rateSelectionColumn
 
@@ -237,6 +293,52 @@ Rectangle {
                         mediaEngine.setVolume(value)
                     }
                 }
+            }
+        }
+
+        RowLayout {
+            spacing: 5
+            visible: captureManager.recordState !== CaptureManager.Stopped
+
+            // 录屏状态指示
+            Rectangle {
+                width: 10
+                height: 10
+                radius: 5
+                color: captureManager.recordState === CaptureManager.Recording ? "red" : captureManager.recordState === CaptureManager.Paused ? "yellow" : "transparent"
+            }
+
+            // 录屏时间显示
+            Label {
+                id: _recordTimeText
+                color: "white"
+                text: {
+                    var sec = captureManager.recordingTime
+                    var min = Math.floor(sec / 60)
+                    sec = sec % 60
+                    return min.toString().padStart(2, '0') + ":" + sec.toString().padStart(2, '0')
+                }
+            }
+
+            // 暂停/继续录屏按钮
+            ToolButton {
+                icon.name: captureManager.recordState === CaptureManager.Paused ?
+                           "media-playback-start" : "media-playback-pause"
+                enabled: captureManager.recordState !== CaptureManager.Stopped
+                onClicked: {
+                    if (captureManager.recordState === CaptureManager.Paused) {
+                        captureManager.resumeRecording()
+                    } else {
+                        captureManager.pauseRecording()
+                    }
+                }
+            }
+
+            // 停止录屏按钮
+            ToolButton {
+                icon.name: "media-playback-stop"
+                enabled: captureManager.recordState !== CaptureManager.Stopped
+                onClicked: captureManager.stopRecording()
             }
         }
     }

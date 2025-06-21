@@ -57,8 +57,6 @@ install(TARGETS appVideo-Player
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-
-
 pkg_check_modules(AVCODEC REQUIRED libavcodec)
 pkg_check_modules(AVFORMAT REQUIRED libavformat)
 pkg_check_modules(AVUTIL REQUIRED libavutil)

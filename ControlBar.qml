@@ -7,6 +7,7 @@ Rectangle {
     property PlaylistModel playlistModel
     property CaptureManager captureManager
     property alias recordTimeText: _recordTimeText
+    property alias cameraTimeText: _cameraTimeText
 
     height: 50
     width: parent.width
@@ -339,6 +340,53 @@ Rectangle {
                 icon.name: "media-playback-stop"
                 enabled: captureManager.recordState !== CaptureManager.Stopped
                 onClicked: captureManager.stopRecording()
+            }
+        }
+
+        // 摄像头控制区域
+        RowLayout {
+            spacing: 5
+            visible: captureManager.cameraState !== CaptureManager.CameraStopped
+
+            // 摄像头状态指示
+            Rectangle {
+                width: 10
+                height: 10
+                radius: 5
+                color: captureManager.cameraState === CaptureManager.CameraRecording ?
+                       "green" : captureManager.cameraState === CaptureManager.CameraPaused ?
+                       "yellow" : "transparent"
+            }
+
+            // 录制时间显示
+            Label {
+                id: _cameraTimeText
+                color: "white"
+                text: {
+                    var sec = captureManager.cameraRecordingTime
+                    var min = Math.floor(sec / 60)
+                    sec = sec % 60
+                    return min.toString().padStart(2, '0') + ":" + sec.toString().padStart(2, '0')
+                }
+            }
+
+            // 暂停/继续按钮
+            ToolButton {
+                icon.name: captureManager.cameraState === CaptureManager.CameraPaused ?
+                           "media-playback-start" : "media-playback-pause"
+                onClicked: {
+                    if (captureManager.cameraState === CaptureManager.CameraPaused) {
+                        captureManager.resumeCameraRecording()
+                    } else {
+                        captureManager.pauseCameraRecording()
+                    }
+                }
+            }
+
+            // 停止按钮
+            ToolButton {
+                icon.name: "media-playback-stop"
+                onClicked: captureManager.stopCameraRecording()
             }
         }
     }

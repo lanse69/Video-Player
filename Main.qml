@@ -59,6 +59,31 @@ ApplicationWindow {
             sec = sec % 60
             content.controlBar.recordTimeText.text = min.toString().padStart(2, '0') + ":" + sec.toString().padStart(2, '0')
         }
+        onRecordAudioChanged: actions.microphone.checked = captureManager.recordAudio
+        onCameraStateChanged: {
+            actions.pauseCamera.enabled = (captureManager.cameraState !== CaptureManager.CameraStopped)
+            actions.stopCamera.enabled = (captureManager.cameraState !== CaptureManager.CameraStopped)
+            actions.pauseCamera.checked = (captureManager.cameraState === CaptureManager.CameraPaused)
+        }
+        onCameraRecordingTimeChanged: {
+            var sec = captureManager.cameraRecordingTime
+            var min = Math.floor(sec / 60)
+            sec = sec % 60
+            content.controlBar.cameraTimeText.text = min.toString().padStart(2, '0') + ":" + sec.toString().padStart(2, '0')
+        }
+        onHasCameraChanged: {
+            if (!captureManager.hasCamera) {
+                content.dialogs.errorDialog.text = "No camera found";
+                content.dialogs.errorDialog.open();
+            }
+        }
+        onCameraSessionChanged: {
+            // 当摄像头会话更新时，确保连接到视频输出
+            if (content.player && content.player.cameraOutput) {
+                captureManager.setVideoSink(content.player.cameraOutput.videoSink)
+            }
+        }
+        onCameraAudioChanged: actions.cameraMicrophone.checked = captureManager.cameraAudio
     }
 
     //历史记录的数据项
@@ -147,11 +172,22 @@ ApplicationWindow {
             }
             Menu {
                 title: qsTr("Recording")
-                MenuItem { action: actions.recordWindow }
-                MenuItem { action: actions.recordFull }
+                MenuItem { action: actions.record }
                 MenuSeparator {}
                 MenuItem { action: actions.pauseRecord }
                 MenuItem { action: actions.stopRecord }
+                MenuSeparator {}
+                MenuItem { action: actions.microphone }
+            }
+            Menu {
+                title: qsTr("Camera")
+                MenuItem { action: actions.camera }
+                MenuItem { action: actions.cameraDevice }
+                MenuSeparator {}
+                MenuItem { action: actions.pauseCamera }
+                MenuItem { action: actions.stopCamera }
+                MenuSeparator {}
+                MenuItem { action: actions.cameraMicrophone }
             }
             MenuSeparator {}
             MenuItem { action: actions.saveLocation }
@@ -171,21 +207,17 @@ ApplicationWindow {
         play.onTriggered: mediaEngine.play()
         pause.onTriggered: mediaEngine.pause()
         stop.onTriggered: mediaEngine.stop()
-
         mute.onTriggered: {
             if (content.mediaEngine) {
                 content.mediaEngine.setMuted(mute.checked)
             }
         }
-
         subtitle.enabled: mediaEngine && mediaEngine.hasSubtitle
-
         subtitle.onTriggered: {
             if (content.mediaEngine) {
                 content.mediaEngine.setSubtitleVisible(subtitle.checked)
             }
         }
-
         previous.onTriggered: {
             if (playlistModel.rowCount > 0) {
                 var newIndex = playlistModel.currentIndex - 1
@@ -193,7 +225,6 @@ ApplicationWindow {
                 playlistModel.currentIndex = newIndex
             }
         }
-
         next.onTriggered: {
             if (playlistModel.rowCount > 0) {
                 var newIndex = playlistModel.currentIndex + 1
@@ -201,25 +232,20 @@ ApplicationWindow {
                 playlistModel.currentIndex = newIndex
             }
         }
-
         aboutQt.onTriggered: content.dialogs.aboutQt.open()
         zeroPointFiveRate.onTriggered: mediaEngine.setPlaybackRate(0.5)
         oneRate.onTriggered: mediaEngine.setPlaybackRate(1)
         onePointFiveRate.onTriggered: mediaEngine.setPlaybackRate(1.5)
         twoRate.onTriggered: mediaEngine.setPlaybackRate(2)
-
         screenshotWindow.onTriggered: {
             mediaEngine.pause()
             window.takeScreenshot(CaptureManager.WindowCapture)
         }
-
         screenshotFull.onTriggered: {
             mediaEngine.pause()
             window.takeScreenshot(CaptureManager.FullScreenCapture)
         }
-
-        recordWindow.onTriggered: captureManager.startRecording(CaptureManager.WindowCapture)
-        recordFull.onTriggered: captureManager.startRecording(CaptureManager.FullScreenCapture)
+        record.onTriggered: captureManager.startRecording()
         pauseRecord.onTriggered: {
             if (pauseRecord.checked) {
                 captureManager.pauseRecording()
@@ -228,26 +254,45 @@ ApplicationWindow {
             }
         }
         stopRecord.onTriggered: captureManager.stopRecording()
-
+        microphone.onTriggered: captureManager.recordAudio = microphone.checked
         saveLocation.onTriggered: content.dialogs.saveLocationDialog.open()
-
+        camera.enabled: captureManager.hasCamera
+        camera.onTriggered: {
+            if(captureManager.setCamera()){
+                mediaEngine.pause()
+                captureManager.startCameraRecording()
+            } else {
+                if (captureManager.availableCameras.length > 1) {
+                    content.dialogs.cameraSelectDialog.open()
+                } else if (captureManager.availableCameras.length === 1) {
+                    captureManager.selectCamera(captureManager.availableCameras[0].id)
+                }
+            }
+        }
+        pauseCamera.onTriggered: {
+            if (pauseCamera.checked) {
+                captureManager.pauseCameraRecording()
+            } else {
+                captureManager.resumeCameraRecording()
+            }
+        }
+        stopCamera.onTriggered: captureManager.stopCameraRecording()
+        cameraMicrophone.onTriggered: captureManager.cameraAudio = cameraMicrophone.checked
+        cameraDevice.onTriggered: content.dialogs.cameraSelectDialog.open()
         fullScreen.onTriggered: { // 全屏
             window.showFullScreen()
             menu.visible = false
         }
-
         exitFullScreen.onTriggered: { // 退出全屏
             window.showNormal()
             menu.visible = true
         }
-
         loopPlayback.onTriggered: mediaEngine.setPlaybackMode(MediaEngine.Loop)
         sequentialPlayback.onTriggered: mediaEngine.setPlaybackMode(MediaEngine.Sequential)
         randomPlayback.onTriggered: mediaEngine.setPlaybackMode(MediaEngine.Random)
         originalAspectRatio.onTriggered: content.player.targetAspectRatio = 0
         aspectRatio16_9.onTriggered: content.player.targetAspectRatio = 16/9
         aspectRatio4_3. onTriggered: content.player.targetAspectRatio = 4/3
-
     }
 
     Content {
@@ -323,9 +368,5 @@ ApplicationWindow {
                 captureManager.captureScreenshot(CaptureManager.FullScreenCapture)
             }
         }
-    }
-
-    Component.onCompleted: {
-        captureManager.setWindowToRecord(window)
     }
 }

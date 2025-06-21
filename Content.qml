@@ -22,6 +22,7 @@ Item {
         id: _player
         anchors.fill: parent
         mediaEngine: content.mediaEngine
+        captureManager: content.captureManager
 
         // 鼠标区域控制控制栏和列表显示
         HoverHandler {

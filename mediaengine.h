@@ -79,6 +79,7 @@ public:
     Q_INVOKABLE void setPlaybackRate(qreal rate); // 设置播放速率
     Q_INVOKABLE void setPlaybackMode(PlaybackMode mode); // 设置视频播放模式
     Q_INVOKABLE void setPlaybackFinished(bool finished); // 设置视频是否结束属性
+    Q_INVOKABLE QString getFrameAtPosition(qint64 position); // 返回相应位置的视频帧
 
 signals:
     void videoSinkChanged();
@@ -115,4 +116,7 @@ private:
     bool m_userMutedSubtitle;
     PlaybackMode m_playbackMode = Sequential; // 视频播放模式
     bool m_playbackFinished = false;          // 视频是否结束
+
+    QMediaPlayer *m_thumbnailPlayer = nullptr; // 缩略图专用播放器
+    QVideoSink *m_thumbnailSink = nullptr;     // 缩略图专用视频接收器
 };

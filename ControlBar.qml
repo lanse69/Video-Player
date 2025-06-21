@@ -123,6 +123,7 @@ Rectangle {
         // 进度条
         Slider {
             id: positionSlider
+            focusPolicy: Qt.NoFocus // 禁用键盘焦点
             Layout.fillWidth: true
             from: 0
             to: mediaEngine ? mediaEngine.duration : 0
@@ -158,16 +159,36 @@ Rectangle {
                 }
             }
 
+            Connections {
+                target: positionSlider
+                function onMoved() {
+                    if (mediaEngine) {
+                        thumbnailImage.source = mediaEngine.getFrameAtPosition(positionSlider.dragValue);
+                    }
+                }
+            }
+
             // 缩略图弹出窗口
             Popup {
                 id: thumbnailPopup
                 parent: positionSlider.handle
                 visible: positionSlider.pressed
-                y: -height - 10
+                y: -height - 5
                 x: -width / 2
                 width: 160
                 height: 90
                 closePolicy: Popup.CloseOnReleaseOutside
+                background: Rectangle {
+                    color: "transparent"
+                }
+
+                Image {
+                    id: thumbnailImage
+                    anchors.fill: parent
+                    fillMode: Image.PreserveAspectCrop
+                    cache: false
+                    source: ""
+                }
 
                 // 显示时间
                 Label {
@@ -273,6 +294,7 @@ Rectangle {
         }
 
         Slider {
+            focusPolicy: Qt.NoFocus // 禁用键盘焦点
             from: 0
             to: 1
             value: mediaEngine ? (mediaEngine.muted ? 0 : mediaEngine.volume) : 0.5

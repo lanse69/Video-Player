@@ -336,11 +336,13 @@ ApplicationWindow {
                         }
                         break;
                     case MediaEngine.Loop: // 循环播放
-                        playlistModel.currentIndex = playlistModel.currentIndex
+                        mediaEngine.setPosition(0) // 重置播放位置到开始
+                        mediaEngine.play() // 重新开始播放
                         break;
                     default:
                         break;
                 }
+                mediaEngine.setPlaybackFinished(false) // 重置播放完成状态
             }
         }
     }

@@ -37,6 +37,7 @@ Item {
     property alias originalAspectRatio: _originalAspectRatio
     property alias aspectRatio16_9: _aspectRatio16_9
     property alias aspectRatio4_3: _aspectRatio4_3
+    property alias smallWindowMode: _smallWindowMode
 
     Action {
         id: _open
@@ -256,5 +257,10 @@ Item {
     Action {
         id: _aspectRatio4_3
         text: qsTr("4:3")
+    }
+
+    Action {
+        id: _smallWindowMode
+        text: qsTr("small Window")
     }
 }

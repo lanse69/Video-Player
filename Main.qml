@@ -9,7 +9,7 @@ ApplicationWindow {
     id: window
     width: 800
     height: 600
-    visible: true
+    visible: !content.player.smallWindowMode // 当小窗口显示时，大窗口不显示
     title: "Video Player"
 
     // 媒体引擎
@@ -155,6 +155,8 @@ ApplicationWindow {
             MenuItem { action: actions.fullScreen }
             MenuItem { action: actions.exitFullScreen }
             MenuSeparator {}
+            MenuItem { action: actions.smallWindowMode }
+            MenuSeparator {}
             Menu {
                 title: qsTr("Video Scale")
                 MenuItem { action: actions.originalAspectRatio }
@@ -280,12 +282,16 @@ ApplicationWindow {
         cameraMicrophone.onTriggered: captureManager.cameraAudio = cameraMicrophone.checked
         cameraDevice.onTriggered: content.dialogs.cameraSelectDialog.open()
         fullScreen.onTriggered: { // 全屏
-            window.showFullScreen()
-            menu.visible = false
+            if (!content.player.smallWindowMode) { // 小窗播放时不能全屏
+                window.showFullScreen()
+                menu.visible = false
+            }
         }
         exitFullScreen.onTriggered: { // 退出全屏
-            window.showNormal()
-            menu.visible = true
+            if (!content.player.smallWindowMode) { // 小窗播放时不能退出全屏
+                window.showNormal()
+                menu.visible = true
+            }
         }
         loopPlayback.onTriggered: mediaEngine.setPlaybackMode(MediaEngine.Loop)
         sequentialPlayback.onTriggered: mediaEngine.setPlaybackMode(MediaEngine.Sequential)
@@ -293,6 +299,7 @@ ApplicationWindow {
         originalAspectRatio.onTriggered: content.player.targetAspectRatio = 0
         aspectRatio16_9.onTriggered: content.player.targetAspectRatio = 16/9
         aspectRatio4_3. onTriggered: content.player.targetAspectRatio = 4/3
+        smallWindowMode.onTriggered: content.player.smallWindowMode = true
     }
 
     Content {
@@ -316,7 +323,7 @@ ApplicationWindow {
         }
     }
 
-    Connections {
+    Connections { // 连接视频结束的信号
         target: mediaEngine
 
         function onPlaybackFinishedChanged() {

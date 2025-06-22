@@ -208,6 +208,7 @@ Rectangle {
 
         // 时间显示
         Label {
+            color: "white"
             text: {
                 if (!mediaEngine) return "00:00 / 00:00"
 

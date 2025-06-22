@@ -19,11 +19,16 @@ Item {
     property alias twoRate: _twoRate
     property alias screenshotWindow: _screenshotWindow
     property alias screenshotFull: _screenshotFull
-    property alias recordWindow: _recordWindow
-    property alias recordFull: _recordFull
+    property alias record: _record
     property alias pauseRecord: _pauseRecord
     property alias stopRecord: _stopRecord
+    property alias microphone: _microphone
     property alias saveLocation: _saveLocation
+    property alias camera: _camera
+    property alias pauseCamera: _pauseCamera
+    property alias stopCamera: _stopCamera
+    property alias cameraMicrophone: _cameraMicrophone
+    property alias cameraDevice: _cameraDevice
     property alias fullScreen: _fullScreen
     property alias exitFullScreen: _exitFullScreen
     property alias loopPlayback: _loopPlayback
@@ -137,14 +142,8 @@ Item {
     }
 
     Action {
-        id: _recordWindow
-        text: qsTr("Record &Window")
-        icon.name: "applications-multimedia-symbolic"
-    }
-
-    Action {
-        id: _recordFull
-        text: qsTr("Record &Full Screen")
+        id: _record
+        text: qsTr("Record Screen")
         icon.name: "applications-multimedia-symbolic"
     }
 
@@ -164,10 +163,53 @@ Item {
     }
 
     Action {
+        id: _microphone
+        text: qsTr("Microphone")
+        icon.name: "audio-input-microphone"
+        checkable: true
+        checked: true
+    }
+
+    Action {
         id: _saveLocation
         text: qsTr("Save Location")
         icon.name: "folder-black"
         shortcut: "Ctrl+L"
+    }
+
+    Action {
+        id: _camera
+        text: qsTr("&Camera")
+        icon.name: "camera-video"
+    }
+
+    Action {
+        id: _pauseCamera
+        text: qsTr("Pause &Camera")
+        icon.name: "media-playback-pause"
+        enabled: false
+        checkable: true
+    }
+
+    Action {
+        id: _stopCamera
+        text: qsTr("Stop &Camera")
+        icon.name: "media-playback-stop"
+        enabled: false
+    }
+
+    Action {
+        id: _cameraDevice
+        text: qsTr("Select &Camera")
+        icon.name: "camera-ready"
+    }
+
+    Action {
+        id: _cameraMicrophone
+        text: qsTr("Microphone")
+        icon.name: "audio-input-microphone"
+        checkable: true
+        checked: true
     }
 
     Action {

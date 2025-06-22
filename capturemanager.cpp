@@ -11,18 +11,37 @@
 #include <QPainter>
 #include <QMediaFormat>
 #include <QScreenCapture>
+#include <QAudioFormat>
+#include <QMediaDevices>
+#include <QAudioDevice>
 
 CaptureManager::CaptureManager(QObject *parent)
     : QObject{parent}
     , m_recordState{Stopped}
     , m_recordTimer{new QTimer(this)}
     , m_recordingSeconds{0}
-    , m_windowToRecord{nullptr}
     , m_screenCapture{nullptr}
     , m_audioInput{nullptr}
     , m_mediaRecorder{nullptr}
+    , m_recordAudio{true}
+    , m_camera{nullptr}
+    , m_imageCapture{nullptr}
+    , m_cameraRecorder{nullptr}
+    , m_cameraTimer{new QTimer(this)}
+    , m_cameraRecordingSeconds{0}
+    , m_cameraState{CameraStopped}
+    , m_cameraSession{nullptr}
+    , m_cameraAudio{true}
+    , m_cameraAudioInput{nullptr}
 {
     connect(m_recordTimer, &QTimer::timeout, this, &CaptureManager::updateRecordingTime);
+    connect(m_cameraTimer, &QTimer::timeout, this, &CaptureManager::updateCameraTime);
+
+    if (QMediaDevices::defaultAudioInput().isNull()) {
+        qWarning() << "No audio input device available";
+        m_recordAudio = false; // 无设备时禁用录音
+        m_cameraAudio = false;
+    }
 }
 
 bool CaptureManager::captureScreenshot(CaptureType type)
@@ -131,7 +150,7 @@ void CaptureManager::removePreviewFile()
     }
 }
 
-void CaptureManager::startRecording(CaptureType type)
+void CaptureManager::startRecording()
 {
     if (m_recordState != Stopped) return;
 
@@ -151,33 +170,30 @@ void CaptureManager::startRecording(CaptureType type)
     m_mediaRecorder->setOutputLocation(QUrl::fromLocalFile(fileName));
 
     // 设置捕获源
-    if (type == WindowCapture) {
-        if (!m_windowToRecord) {
-            emit errorOccurred(tr("No window set for recording"));
-            return;
-        }
-        QScreen *screen = m_windowToRecord->screen();
-        if (!screen) {
-            emit errorOccurred(tr("Window's screen not found"));
-            return;
-        }
-        m_screenCapture = new QScreenCapture(this);
-        m_screenCapture->setScreen(screen);
-        m_captureSession.setScreenCapture(m_screenCapture);
-    } else {
-        QScreen *screen = QGuiApplication::primaryScreen();
-        if (!screen) {
-            emit errorOccurred(tr("No primary screen found"));
-            return;
-        }
-        m_screenCapture = new QScreenCapture(this);
-        m_screenCapture->setScreen(screen);
-        m_captureSession.setScreenCapture(m_screenCapture);
+    QScreen *screen = QGuiApplication::primaryScreen();
+    if (!screen) {
+        emit errorOccurred(tr("No primary screen found"));
+        return;
     }
+    m_screenCapture = new QScreenCapture(this);
+    m_screenCapture->setScreen(screen);
+    m_captureSession.setScreenCapture(m_screenCapture);
 
-    // 设置音频输入
-    m_audioInput = new QAudioInput(this);
-    m_captureSession.setAudioInput(m_audioInput);
+    if (m_recordAudio) {
+        m_audioInput = new QAudioInput(this);
+
+        // 使用默认音频输入设备
+        QAudioDevice inputDevice = QMediaDevices::defaultAudioInput();
+        if (inputDevice.isNull()) {
+            emit errorOccurred(tr("No audio input device found"));
+            return;
+        }
+
+        m_audioInput->setDevice(inputDevice);
+
+        m_audioInput->setVolume(0.8);
+        m_captureSession.setAudioInput(m_audioInput);
+    }
 
     // 设置录制器
     m_captureSession.setRecorder(m_mediaRecorder);
@@ -204,11 +220,16 @@ void CaptureManager::setupScreenRecorder()
     // 初始化媒体格式
     QMediaFormat format;
     format.setFileFormat(QMediaFormat::MPEG4);
-    format.setVideoCodec(QMediaFormat::VideoCodec::H264);
+    format.setVideoCodec(QMediaFormat::VideoCodec::H265);
     format.setAudioCodec(QMediaFormat::AudioCodec::AAC);
     m_mediaRecorder->setMediaFormat(format);
-    m_mediaRecorder->setVideoResolution(1920, 1080);
-    m_mediaRecorder->setVideoFrameRate(30);
+    // 设置分辨率
+    m_mediaRecorder->setVideoResolution(QGuiApplication::primaryScreen()->size());
+    // 设置比特率
+    m_mediaRecorder->setVideoBitRate(8000000);
+    // 设置帧率
+    m_mediaRecorder->setVideoFrameRate(60);
+
     m_mediaRecorder->setQuality(QMediaRecorder::HighQuality);
 }
 
@@ -217,7 +238,6 @@ void CaptureManager::pauseRecording()
     if (m_recordState != Recording) return;
 
     m_mediaRecorder->pause();
-    if (m_screenCapture) { m_screenCapture->stop(); }
 
     m_recordState = Paused;
     emit recordStateChanged();
@@ -228,7 +248,6 @@ void CaptureManager::resumeRecording()
 {
     if (m_recordState != Paused) return;
 
-    if (m_screenCapture) { m_screenCapture->start(); }
     m_mediaRecorder->record();
 
     m_recordState = Recording;
@@ -259,6 +278,8 @@ void CaptureManager::cleanupRecorder()
     if (m_mediaRecorder) {
         m_mediaRecorder->stop();
         m_captureSession.setRecorder(nullptr);
+        delete m_mediaRecorder;
+        m_mediaRecorder = nullptr;
     }
 
     if (m_screenCapture) {
@@ -280,11 +301,6 @@ int CaptureManager::recordingTime() const
     return m_recordingSeconds;
 }
 
-void CaptureManager::setWindowToRecord(QWindow *window)
-{
-    m_windowToRecord = window;
-}
-
 void CaptureManager::updateRecordingTime()
 {
     m_recordingSeconds++;
@@ -294,4 +310,250 @@ void CaptureManager::updateRecordingTime()
 CaptureManager::RecordState CaptureManager::recordState() const
 {
     return m_recordState;
+}
+
+bool CaptureManager::recordAudio() const
+{
+    return m_recordAudio;
+}
+
+void CaptureManager::setRecordAudio(bool enable)
+{
+    if (m_recordAudio != enable) {
+        m_recordAudio = enable;
+        emit recordAudioChanged();
+    }
+}
+
+void CaptureManager::updateCameraTime()
+{
+    m_cameraRecordingSeconds++;
+    emit cameraRecordingTimeChanged();
+}
+
+bool CaptureManager::hasCamera() const
+{
+    return !m_availableCameras.isEmpty();
+}
+
+QMediaCaptureSession *CaptureManager::cameraSession() const
+{
+    return m_cameraSession;
+}
+
+QVariantList CaptureManager::availableCameras()
+{
+    if (m_availableCameras.isEmpty()) {
+        m_availableCameras = QMediaDevices::videoInputs();
+        emit availableCamerasChanged();
+        emit hasCameraChanged();
+    }
+
+    QVariantList list;
+    for (auto &device : m_availableCameras) {
+        QVariantMap map;
+        map["id"] = device.id();
+        map["description"] = device.description();
+        list.append(map);
+    }
+    return list;
+}
+
+void CaptureManager::setVideoSink(QVideoSink *sink)
+{
+    if (m_cameraSession) { m_cameraSession->setVideoSink(sink); }
+}
+
+bool CaptureManager::setCamera()
+{
+    return m_camera;
+}
+
+void CaptureManager::selectCamera(const QString &deviceId)
+{
+    if (m_camera) { cleanupCameraRecorder(); }
+
+    if (m_availableCameras.isEmpty()) {
+        m_availableCameras = QMediaDevices::videoInputs();
+        emit availableCamerasChanged();
+        emit hasCameraChanged();
+    }
+
+    auto it = std::find_if(m_availableCameras.begin(), m_availableCameras.end(), [&](const QCameraDevice &device) {
+        return device.id() == deviceId;
+    });
+
+    if (it != m_availableCameras.end()) {
+        m_camera = new QCamera(*it, this);
+        setupCameraRecorder();
+        emit cameraChanged();
+    }
+}
+
+void CaptureManager::setupCameraRecorder()
+{
+    if (!m_camera) return;
+
+    m_cameraSession = new QMediaCaptureSession(this);
+
+    m_cameraSession->setCamera(m_camera);
+
+    // 设置图像捕捉
+    m_imageCapture = new QImageCapture(this);
+    m_cameraSession->setImageCapture(m_imageCapture);
+
+    // 设置视频录制
+    m_cameraRecorder = new QMediaRecorder(this);
+    m_cameraSession->setRecorder(m_cameraRecorder);
+
+    // 配置录制格式
+    QMediaFormat format;
+    format.setFileFormat(QMediaFormat::MPEG4);
+    format.setVideoCodec(QMediaFormat::VideoCodec::H265);
+    format.setAudioCodec(QMediaFormat::AudioCodec::AAC);
+    m_cameraRecorder->setMediaFormat(format);
+    m_cameraRecorder->setVideoResolution(QGuiApplication::primaryScreen()->size());
+    m_cameraRecorder->setQuality(QMediaRecorder::HighQuality);
+
+    if (m_cameraAudio) {
+        m_cameraAudioInput = new QAudioInput(this);
+
+        // 使用默认音频输入设备
+        QAudioDevice inputDevice = QMediaDevices::defaultAudioInput();
+        if (inputDevice.isNull()) {
+            emit errorOccurred(tr("No audio input device found"));
+            return;
+        }
+
+        m_cameraAudioInput->setDevice(inputDevice);
+
+        m_cameraAudioInput->setVolume(0.8);
+        m_cameraSession->setAudioInput(m_cameraAudioInput);
+    }
+
+    connect(m_cameraRecorder,
+            &QMediaRecorder::errorOccurred,
+            this,
+            [this](QMediaRecorder::Error error, const QString &errorString) { emit errorOccurred(errorString); });
+
+    connect(m_camera, &QCamera::errorOccurred, this, [this](QCamera::Error error, const QString &errorString) {
+        emit errorOccurred(errorString);
+    });
+
+    emit cameraSessionChanged();
+}
+
+void CaptureManager::cleanupCameraRecorder()
+{
+    if (m_cameraRecorder) {
+        m_cameraRecorder->stop();
+        m_cameraSession->setRecorder(nullptr);
+        delete m_cameraRecorder;
+        m_cameraRecorder = nullptr;
+    }
+
+    if (m_imageCapture) {
+        m_cameraSession->setImageCapture(nullptr);
+        delete m_imageCapture;
+        m_imageCapture = nullptr;
+    }
+
+    if (m_camera) {
+        m_camera->stop();
+        m_cameraSession->setCamera(nullptr);
+        delete m_camera;
+        m_camera = nullptr;
+    }
+
+    if (m_cameraAudioInput) {
+        m_cameraSession->setAudioInput(nullptr);
+        delete m_cameraAudioInput;
+        m_cameraAudioInput = nullptr;
+    }
+
+    m_cameraState = CameraStopped;
+    emit cameraStateChanged();
+}
+
+void CaptureManager::startCameraRecording()
+{
+    if (m_cameraState != CameraStopped || !m_camera) return;
+
+    // 创建保存路径
+    QString dirPath = generateFilePath(Record);
+    QDir dir(dirPath);
+    if (!dir.exists()) dir.mkpath(".");
+    QString fileName = dirPath + QDir::separator() + "camera_"
+                       + QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss") + ".mp4";
+
+    m_cameraRecorder->setOutputLocation(QUrl::fromLocalFile(fileName));
+
+    m_camera->start();
+    m_cameraState = CameraRecording;
+    emit cameraStateChanged();
+
+    m_cameraRecorder->record();
+    // 开始计时
+    m_cameraRecordingSeconds = 0;
+    emit cameraRecordingTimeChanged();
+    m_cameraTimer->start(1000);
+}
+
+void CaptureManager::pauseCameraRecording()
+{
+    if (m_cameraState != CameraRecording) return;
+
+    m_cameraRecorder->pause();
+    m_cameraState = CameraPaused;
+    emit cameraStateChanged();
+    m_cameraTimer->stop();
+}
+
+void CaptureManager::resumeCameraRecording()
+{
+    if (m_cameraState != CameraPaused) return;
+
+    m_cameraRecorder->record();
+    m_cameraState = CameraRecording;
+    emit cameraStateChanged();
+    m_cameraTimer->start();
+}
+
+void CaptureManager::stopCameraRecording()
+{
+    if (m_cameraState == CameraStopped) return;
+
+    m_cameraRecorder->stop();
+    m_camera->stop();
+    m_cameraState = CameraStopped;
+    emit cameraStateChanged();
+    m_cameraTimer->stop();
+
+    m_cameraRecordingSeconds = 0;
+    emit cameraRecordingTimeChanged();
+
+    cleanupCameraRecorder();
+}
+
+CaptureManager::CameraState CaptureManager::cameraState() const
+{
+    return m_cameraState;
+}
+
+int CaptureManager::cameraRecordingTime() const
+{
+    return m_cameraRecordingSeconds;
+}
+
+bool CaptureManager::cameraAudio() const
+{
+    return m_cameraAudio;
+}
+
+void CaptureManager::setCameraAudio(bool enable)
+{
+    if (m_cameraAudio != enable) {
+        m_cameraAudio = enable;
+        emit cameraAudioChanged();
+    }
 }

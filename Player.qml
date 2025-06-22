@@ -5,9 +5,12 @@ import VideoPlayer
 
 Item {
     property MediaEngine mediaEngine
+    property CaptureManager captureManager
     property bool subtitleVisible: mediaEngine ? mediaEngine.subtitleVisible : true
     property string currentSubtitle: ""
     property real targetAspectRatio: 0  // 0为原始比例, 16/9为16:9, 4/3为4:3
+    property bool cameraActive: captureManager ? captureManager.cameraState !== CaptureManager.CameraStopped : false
+    property alias cameraOutput: _cameraOutput
 
     Item {
         id: _videoContainer
@@ -109,6 +112,21 @@ Item {
     onMediaEngineChanged: {
         if (mediaEngine) {
             mediaEngine.setVideoSink(videoOutput.videoSink)
+        }
+    }
+
+    VideoOutput {
+        id: _cameraOutput
+        anchors.fill: parent
+        visible: cameraActive
+    }
+
+    Connections {
+        target: captureManager
+        function onCameraChanged() {
+            if (captureManager && captureManager.cameraSession) {
+                captureManager.setVideoSink(_cameraOutput.videoSink)
+            }
         }
     }
 }

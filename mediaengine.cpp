@@ -7,7 +7,10 @@
 #include <QRegularExpression>
 #include <QStringConverter>
 #include <QSize>
-#include <QVideoSink>
+#include <QVideoFrame>
+#include <QBuffer>
+#include <QEventLoop>
+#include <QTimer>
 
 MediaEngine::MediaEngine(QObject *parent)
     : QObject(parent)
@@ -22,6 +25,12 @@ MediaEngine::MediaEngine(QObject *parent)
     m_audioOutput = new QAudioOutput(this);
     m_audioOutput->setVolume(m_lastVolume);
     m_player->setAudioOutput(m_audioOutput);
+
+    // 创建专用缩略图播放器
+    m_thumbnailPlayer = new QMediaPlayer(this);
+    m_thumbnailSink = new QVideoSink(this);
+    m_thumbnailPlayer->setVideoOutput(m_thumbnailSink);
+    m_thumbnailPlayer->setAudioOutput(nullptr); // 禁用音频输出
 
     connect(m_player, &QMediaPlayer::playbackStateChanged, this, &MediaEngine::playingChanged);
     connect(m_player, &QMediaPlayer::positionChanged, this, &MediaEngine::positionChanged);
@@ -437,6 +446,53 @@ bool MediaEngine::playbackFinished() const
 
 void MediaEngine::setPlaybackFinished(bool finished)
 {
-    m_playbackFinished = finished;
-    emit playbackFinishedChanged();
+    if (m_playbackFinished != finished) {
+        m_playbackFinished = finished;
+        emit playbackFinishedChanged();
+    }
+}
+
+QString MediaEngine::getFrameAtPosition(qint64 position)
+{
+    if (!m_player->hasVideo()) return ""; // 检查是否有视频流
+
+    // 设置缩略图播放器的源
+    m_thumbnailPlayer->setSource(m_player->source());
+
+    // 连接信号以等待帧可用
+    QEventLoop loop;
+    QObject::connect(m_thumbnailSink, &QVideoSink::videoFrameChanged, &loop, &QEventLoop::quit);
+    m_thumbnailPlayer->setPosition(position);
+    m_thumbnailPlayer->play();
+    loop.exec(QEventLoop::ExcludeUserInputEvents); // 非阻塞式等待
+    QVideoFrame frame = m_thumbnailSink->videoFrame();
+
+    if (!frame.isValid()) {
+        m_thumbnailPlayer->setSource(QUrl());
+        return "";
+    }
+
+    // 确保帧已映射
+    if (!frame.map(QVideoFrame::ReadOnly)) {
+        m_thumbnailPlayer->setSource(QUrl());
+        return "";
+    }
+
+    QImage image = frame.toImage(); // 转换为图像
+    frame.unmap();
+    if (image.isNull()) {
+        m_thumbnailPlayer->setSource(QUrl());
+        return "";
+    }
+
+    // 转换为Base64字符串
+    QByteArray byteArray;
+    QBuffer buffer(&byteArray);
+    buffer.open(QIODevice::WriteOnly);
+    if (!image.save(&buffer, "PNG")) {
+        m_thumbnailPlayer->pause();
+        return "";
+    }
+
+    return "data:image/png;base64," + byteArray.toBase64();
 }

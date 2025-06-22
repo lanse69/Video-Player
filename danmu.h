@@ -5,8 +5,8 @@
 class Danmu
 {
 public:
-    Danmu(qint64 sendTime, QString content, );
+    Danmu(qint64 sendTime, QString content, Font *font);
 
 private:
-    Danmu font
+    Font *font;
 };

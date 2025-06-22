@@ -1,3 +1,3 @@
 #include "font.h"
 
-Font::Font() {}
+Font::Font() : font{"DejaVu Sans Mono"}, size{40} {}

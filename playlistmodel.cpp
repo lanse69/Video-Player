@@ -156,8 +156,7 @@ void PlaylistModel::histroy()
         QTextStream in(&file);
         while (!in.atEnd()) {
             QString line = in.readLine().trimmed();
-            if (QFile::exists(QUrl(line).toLocalFile()))
-                readFile.append(QUrl(line));
+            if (QFile::exists(QUrl(line).toLocalFile())) readFile.append(QUrl(line));
         }
         file.close();
     } else {
@@ -182,9 +181,7 @@ void PlaylistModel::setHistroy(QUrl url)
         qDebug() << "setHistroy read failed";
     }
     //移除已存在的相同的url
-    if (readFile.contains(url)) {
-        readFile.removeOne(url);
-    }
+    if (readFile.contains(url)) { readFile.removeOne(url); }
     readFile.prepend(url);
 
     //清除超出范围的数据
@@ -295,7 +292,7 @@ QString PlaylistModel::getTitleByFF(QUrl url) const
     // 获取标题元数据
     AVDictionaryEntry *tag = av_dict_get(fmt_ctx->metadata, "title", NULL, 0);
     if (tag && tag->value) {
-        ans = QString::fromUtf8(tag->value); // 正确处理UTF-8编码
+        ans = QString::fromUtf8(tag->value); // 处理UTF-8编码
     } else {
         // 使用文件名作为标题
         QFileInfo fileInfo(localPath);

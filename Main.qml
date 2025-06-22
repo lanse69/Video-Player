@@ -266,6 +266,8 @@ ApplicationWindow {
                     content.dialogs.cameraSelectDialog.open()
                 } else if (captureManager.availableCameras.length === 1) {
                     captureManager.selectCamera(captureManager.availableCameras[0].id)
+                    mediaEngine.pause()
+                    captureManager.startCameraRecording()
                 }
             }
         }
@@ -369,6 +371,43 @@ ApplicationWindow {
             if (type === CaptureManager.FullScreenCapture) {
                 captureManager.captureScreenshot(CaptureManager.FullScreenCapture)
             }
+        }
+    }
+
+    // 拖放处理器
+    DragDropManager {
+        id: dragHandler
+        onFilesDropped: function (urls) {
+            playlistModel.addMedias(urls)
+            // 添加到历史记录
+            for (var j = 0; j < urls.length; j++) {
+                histroyListModel.setHistroy(urls[j])
+            }
+            // 如果当前没有播放，则播放第一个
+            if (playlistModel.rowCount > 0 && !mediaEngine.playing) {
+                playlistModel.currentIndex = 0
+            }
+        }
+
+        Component.onCompleted: setWindow(window)
+    }
+
+    // 拖放区域视觉反馈
+    Rectangle {
+        id: dragRect
+        anchors.fill: parent
+        color: "#4000aaff"
+        border.color: "#0088ff"
+        border.width: 4
+        radius: 8
+        visible: dragHandler.dragActive
+        // visible: dropArea.containsDrag
+
+        Label {
+            anchors.centerIn: parent
+            text: "拖放音视频文件到此处"
+            font.pixelSize: 28
+            color: "white"
         }
     }
 }

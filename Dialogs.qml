@@ -12,6 +12,7 @@ Item {
     property alias previewDialog: _previewDialog
     property alias errorDialog: _errorDialog
     property alias saveLocationDialog: _saveLocationDialog
+    property alias cameraSelectDialog: _cameraSelectDialog
 
     FileDialog {
         id: _fileOpen
@@ -37,8 +38,6 @@ Item {
         title: "Screenshot Preview"
         modal: true
         standardButtons: Dialog.Save | Dialog.Discard
-        // Layout.fillWidth: parent.width
-        // Layout.fillHeight: parent.height
 
         background: Rectangle {
             color: "black"
@@ -115,9 +114,9 @@ Item {
                 spacing: 5
 
                 Label {
-                    text: "截图保存位置:"
+                    text: "截图默认保存位置:"
                     font.bold: true
-                    color: "#3498db"
+                    color: "red"
                 }
 
                 Rectangle {
@@ -137,15 +136,14 @@ Item {
                 }
             }
 
-            // 录屏路径
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 5
 
                 Label {
-                    text: "录屏保存位置:"
+                    text: "录屏/拍摄保存位置:"
                     font.bold: true
-                    color: "#e74c3c"
+                    color: "red"
                 }
 
                 Rectangle {
@@ -164,6 +162,51 @@ Item {
                     }
                 }
             }
+
+            Label {
+                text: "麦克风开关是关于是否录音的选项\n只有记录前的选择有用，记录中修改选择无法起作用"
+                font.bold: true
+                color: "red"
+            }
         }
     }
+
+    Dialog {
+       id: _cameraSelectDialog
+       title: "Select Camera"
+       modal: true
+       standardButtons: Dialog.Ok | Dialog.Cancel
+
+       ColumnLayout {
+           width: parent.width
+
+           Label {
+               text: "Available Cameras:"
+               font.bold: true
+           }
+
+           ComboBox {
+               id: cameraComboBox
+               Layout.fillWidth: true
+               textRole: "description"
+           }
+
+           Label {
+               visible: cameraComboBox.count === 0
+               text: "No cameras found"
+               color: "red"
+           }
+       }
+
+       onOpened: {
+              cameraComboBox.model = captureManager ? captureManager.availableCameras : []
+          }
+
+       onAccepted: {
+           if (cameraComboBox.currentIndex >= 0) {
+               var device = cameraComboBox.model[cameraComboBox.currentIndex]
+               captureManager.selectCamera(device.id)
+           }
+       }
+   }
 }

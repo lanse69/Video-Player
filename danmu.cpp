@@ -1,7 +1,7 @@
 #include "danmu.h"
 
-Danmu::Danmu() {}
-
 Danmu::Danmu(
-    qint64 sendTime, QString content, Font *font)
+    qint64 sendTime, QString content)
+    : m_sendTime(sendTime)
+    , m_content(content)
 {}

@@ -28,6 +28,9 @@ qt_add_qml_module(appVideo-Player
     QML_FILES Content.qml
     QML_FILES ControlBar.qml
     RESOURCES resources.qrc
+    SOURCES danmu.h danmu.cpp
+    SOURCES font.h font.cpp
+    SOURCES danmutrack.h danmutrack.cpp
 )
 
 target_compile_features(appVideo-Player PRIVATE cxx_std_23)

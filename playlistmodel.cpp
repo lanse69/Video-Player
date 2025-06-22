@@ -111,7 +111,7 @@ void PlaylistModel::move(
                   preIndex,
                   preIndex + num - 1,
                   QModelIndex(),
-                  newIndex > preIndex ? newIndex + 1 : newIndex);
+                  newIndex > preIndex ? newIndex + 1 : newIndex);  //通知视图要开始移动元素了
     QList<MediaInfo> movingItems = m_mediaList.mid(preIndex, num); // 创建临时列表保存要移动的元素
 
     m_mediaList.remove(preIndex, num); //将已存入的元素删除
@@ -119,7 +119,7 @@ void PlaylistModel::move(
     for (int i = 0; i < num; i++) {
         m_mediaList.insert(newIndex, movingItems[i]);
     }
-    endMoveRows();
+    endMoveRows(); //通知视图元素移动结束了
 
     //根据preIndex和newIndex修改m_current
     if (preIndex <= m_currentIndex && m_currentIndex < preIndex + num) { //当m_currentIndex是移动项时
@@ -263,6 +263,8 @@ void PlaylistModel::setCurrentIndex(int index)
         return;
     }
     m_currentIndex = index;
+
+    //如果属性的值没有变化则不发送变化信号
     if (m_currentIndex != preIndex)
         emit currentIndexChanged(m_currentIndex);
 }

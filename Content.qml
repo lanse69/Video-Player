@@ -15,6 +15,7 @@ Item {
     property alias danmuManager: _danmuManager
     property alias danmuTimer: _danmuTimer
     property alias danmuGenerater: _danmuGenerater
+
     Dialogs {
         id: _dialogs
         captureManager: content.captureManager

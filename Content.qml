@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import VideoPlayer
+import "DanmuRender.js" as DanmuRender
 
 Item {
     id:content
@@ -11,7 +12,9 @@ Item {
     property alias dialogs: _dialogs
     property alias player: _player
     property alias controlBar: _controlBar
-
+    property alias danmuManager: _danmuManager
+    property alias danmuTimer: _danmuTimer
+    property alias danmuGenerater: _danmuGenerater
     Dialogs {
         id: _dialogs
         captureManager: content.captureManager
@@ -38,9 +41,31 @@ Item {
                     playlistcurtain.visible=(point.position.x > parent.width *(3/4))
                     // 当鼠标靠近底部时显示控制栏
                     controlBar.visible = (point.position.y > parent.height - 100)
-
             }
         }
+    }
+
+    //弹幕渲染,由弹幕管理器，弹幕计时器（定时读取弹幕），弹幕生成器,弹幕渲染器配合完成
+    DanmuManager{
+        id:_danmuManager
+    }
+    Timer{
+        id:_danmuTimer
+        running:mediaEngine.playing
+        repeat: true
+        interval: 1000
+        onTriggered: {
+            if(DanmuRender.count>0){
+                DanmuRender.danmusRender(danmuManager.danmus(parent.width,DanmuRender.count,mediaEngine.position))
+            }
+        }
+    }
+    Repeater{
+        id:_danmuGenerater
+        visible: mediaEngine.playing
+        anchors.fill: parent
+        model:100
+        delegate: Danmu{}
     }
 
     //播放列表的搜索框
@@ -89,7 +114,7 @@ Item {
         anchors {
             top: searchBox.bottom
             right: parent.right
-            bottom: parent.bottom
+            bottom: controlBar.top
         }
         playlist: content.playlistModel
     }
@@ -100,7 +125,7 @@ Item {
         anchors {
             top: searchBox.bottom
             right: parent.right
-            bottom: parent.bottom
+            bottom: controlBar.top
         }
         visible: false
         playlist: searchlistModel
@@ -124,6 +149,9 @@ Item {
                     if (title) {
                         window.title = "Video Player - "+title
                     }
+                    //初始化弹幕
+                    danmuManager.initDanmus(title)
+                    danmuManager.initTracks(content.height*(1/4))
                 }
             }
         }

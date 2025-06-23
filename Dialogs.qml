@@ -37,8 +37,6 @@ Item {
         title: "Screenshot Preview"
         modal: true
         standardButtons: Dialog.Save | Dialog.Discard
-        // Layout.fillWidth: parent.width
-        // Layout.fillHeight: parent.height
 
         background: Rectangle {
             color: "black"

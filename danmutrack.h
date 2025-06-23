@@ -3,6 +3,8 @@
 
 class DanmuTrack
 {
+    friend class DanmuManager;
+
 public:
     DanmuTrack(int y);
 

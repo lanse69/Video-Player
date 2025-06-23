@@ -1,12 +1,16 @@
 #pragma once
 #include <QString>
+#include <QObject>
 
-class Font
+class Font : public QObject
 {
+    Q_OBJECT
+    friend class DanmuManager;
+
 public:
     Font();
 
 private:
-    QString font = "DejaVu Sans Mono";
-    int size = 40;
+    QString m_font = "DejaVu Sans Mono";
+    int m_size = 40;
 };

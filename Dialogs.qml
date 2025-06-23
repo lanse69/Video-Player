@@ -14,6 +14,7 @@ Item {
     property alias saveLocationDialog: _saveLocationDialog
     property alias cameraSelectDialog: _cameraSelectDialog
     property alias recordingLayoutDialog: _recordingLayoutDialog
+    property alias timedPauseDialog: _timedPauseDialog
 
     FileDialog {
         id: _fileOpen
@@ -288,5 +289,144 @@ Item {
                 captureManager.startCameraRecording()
             }
         }
+    }
+
+    // 定时暂停
+    Dialog {
+        id: _timedPauseDialog
+        title: qsTr("Set Pause time")
+        modal: true
+
+        ColumnLayout {
+            width: parent.width
+            Button {
+                Layout.fillWidth: parent
+                text: qsTr("Cancel Timed Pause")
+                onClicked: timedPause(0)
+            }
+
+            Button {
+                Layout.fillWidth: parent
+                text: qsTr("5:00")
+                onClicked: timedPause(5)
+            }
+
+            Button {
+                Layout.fillWidth: parent
+                text: qsTr("15:00")
+                onClicked: timedPause(15)
+            }
+
+            Button {
+                Layout.fillWidth: parent
+                text: qsTr("30:00")
+                onClicked: timedPause(30)
+            }
+
+            Button {
+                Layout.fillWidth: parent
+                text: qsTr("60:00")
+                onClicked: timedPause(60)
+            }
+
+            Button {
+                Layout.fillWidth: parent
+                text: qsTr("Custom")
+                onClicked: {
+                    _timedPauseDialog.close()
+                    customTimedPauseDialog.open()
+                }
+            }
+        }
+    }
+
+    Dialog { // 自定义定时暂停
+        id: customTimedPauseDialog
+        title: "Custom Timed Pause"
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        ColumnLayout {
+            RowLayout {
+                Label {
+                    text: "Hours:"
+                    Layout.preferredWidth: 60
+                }
+
+                SpinBox {
+                    id: hoursInput
+                    from: 0
+                    to: 24
+                    value: 0
+                }
+            }
+
+            RowLayout {
+                Label {
+                    text: "Minutes:"
+                    Layout.preferredWidth: 60
+                }
+
+                SpinBox {
+                    id: minutesInput
+                    from: 0
+                    to: 59
+                    value: 0
+                }
+            }
+        }
+
+        onOpened: {
+            var minutes = mediaEngine.pauseTime();
+            if (minutes > 0) { // 如果有已设置的定时暂停时间，初始化对话框值
+                hoursInput.value = Math.floor(minutes / 60)
+                minutesInput.value = minutes % 60
+            } else {
+                hoursInput.value = 0;
+                minutesInput.value = 0;
+            }
+        }
+
+        onAccepted: {
+            var totalMinutes = hoursInput.value * 60 + minutesInput.value
+            if (totalMinutes > 0) {
+                mediaEngine.timedPauseStart(totalMinutes)
+                showTimedPauseNotification(totalMinutes)
+            } else {
+                mediaEngine.timedPauseStart(0)
+                showTimedPauseNotification(0)
+            }
+        }
+    }
+
+    function timedPause(minutes) {
+        mediaEngine.timedPauseStart(minutes);
+        _timedPauseDialog.close();
+        showTimedPauseNotification(minutes);
+    }
+
+    // 定时暂停设置通知
+    Dialog {
+        id: timedPauseNotification
+        width: 200
+        height: 30
+
+        property alias text : notificationText.text
+        Text {
+            id: notificationText
+        }
+    }
+
+    function showTimedPauseNotification(minutes) {
+        if (minutes > 0) {
+            timedPauseNotification.text = "Timed puase acivited";
+        } else {
+            timedPauseNotification.text = "Cancel timed pause";
+        }
+        timedPauseNotification.open();
+    }
+
+    Timer {
+        interval: 2000
+        running: timedPauseNotification.opened
+        onTriggered: timedPauseNotification.close()
     }
 }

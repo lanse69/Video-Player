@@ -39,6 +39,7 @@ Item {
     property alias aspectRatio16_9: _aspectRatio16_9
     property alias aspectRatio4_3: _aspectRatio4_3
     property alias smallWindowMode: _smallWindowMode
+    property alias timedPause: _timedPause
 
     Action {
         id: _open
@@ -270,4 +271,9 @@ Item {
         id: _smallWindowMode
         text: qsTr("small Window")
     }
+
+    Action {
+         id: _timedPause
+         text: "Timed Pause"
+     }
 }

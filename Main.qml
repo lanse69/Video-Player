@@ -154,6 +154,8 @@ ApplicationWindow {
             MenuItem { action: actions.loopPlayback }
             MenuItem { action: actions.sequentialPlayback }
             MenuItem { action: actions.randomPlayback }
+            MenuSeparator {}
+            MenuItem { action: actions.timedPause }
         }
 
         Menu {
@@ -341,6 +343,7 @@ ApplicationWindow {
         aspectRatio16_9.onTriggered: content.player.targetAspectRatio = 16/9
         aspectRatio4_3. onTriggered: content.player.targetAspectRatio = 4/3
         smallWindowMode.onTriggered: content.player.smallWindowMode = true
+        timedPause.onTriggered: content.dialogs.timedPauseDialog.open()
     }
 
     Content {

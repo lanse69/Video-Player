@@ -31,6 +31,7 @@ bool DragDropManager::eventFilter(QObject *watched, QEvent *event)
     if (!m_window || watched != m_window) return false;
 
     switch (event->type()) {
+    // 拖动进入
     case QEvent::DragEnter: {
         QDragEnterEvent *dragEvent = static_cast<QDragEnterEvent *>(event);
         const QMimeData *mimeData = dragEvent->mimeData();
@@ -64,6 +65,7 @@ bool DragDropManager::eventFilter(QObject *watched, QEvent *event)
         break;
     }
 
+    // 拖动释放
     case QEvent::Drop: {
         QDropEvent *dropEvent = static_cast<QDropEvent *>(event);
         const QMimeData *mimeData = dropEvent->mimeData();
@@ -95,12 +97,14 @@ bool DragDropManager::eventFilter(QObject *watched, QEvent *event)
         return true;
     }
 
+    // 拖动移动
     case QEvent::DragMove: {
         QDragMoveEvent *dragMoveEvent = static_cast<QDragMoveEvent *>(event);
         dragMoveEvent->accept();
         return true;
     }
 
+    // 拖动离开
     case QEvent::DragLeave: {
         m_dragActive = false;
         emit dragActiveChanged();

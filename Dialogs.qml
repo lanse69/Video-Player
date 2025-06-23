@@ -13,6 +13,7 @@ Item {
     property alias errorDialog: _errorDialog
     property alias saveLocationDialog: _saveLocationDialog
     property alias cameraSelectDialog: _cameraSelectDialog
+    property alias recordingLayoutDialog: _recordingLayoutDialog
 
     FileDialog {
         id: _fileOpen
@@ -99,8 +100,6 @@ Item {
     Dialog {
         id: _saveLocationDialog
         title: "截图与录制保存位置"
-        width: 500
-        height: 300
         modal: true
         standardButtons: Dialog.Close
 
@@ -169,6 +168,12 @@ Item {
                 font.bold: true
                 color: "red"
             }
+
+            Label {
+                text: "录制时功能键会出现在下方工具栏里\n录屏：录制时显示红色\n拍摄：录制时显示绿色"
+                font.bold: true
+                color: "red"
+            }
         }
     }
 
@@ -219,4 +224,69 @@ Item {
            }
        }
    }
+
+    // 录制布局选择对话框
+    Dialog {
+        id: _recordingLayoutDialog
+        title: "录制布局设置"
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 400
+
+        ColumnLayout {
+            spacing: 15
+            width: parent.width
+
+            Label {
+                text: "选择录制时播放画面的显示方式:"
+                font.bold: true
+            }
+
+            ButtonGroup {
+                id: layoutGroup
+            }
+
+            RadioButton {
+                text: "关闭播放画面"
+                ButtonGroup.group: layoutGroup
+                checked: true
+            }
+
+            RadioButton {
+                text: "左右分框 (播放器 | 摄像头)"
+                ButtonGroup.group: layoutGroup
+            }
+
+            RadioButton {
+                text: "上下分框 (播放器 / 摄像头)"
+                ButtonGroup.group: layoutGroup
+            }
+
+            RadioButton {
+                text: "小窗模式 (摄像头主画面，播放器小窗)"
+                ButtonGroup.group: layoutGroup
+            }
+
+            CheckBox {
+                id: rememberChoice
+                text: "记住我的选择"
+                checked: true
+            }
+        }
+
+        onAccepted: {
+            var layout = CaptureManager.LayoutNull;
+            if (layoutGroup.buttons[1].checked) layout = CaptureManager.SideBySide;
+            else if (layoutGroup.buttons[2].checked) layout = CaptureManager.TopBottom;
+            else if (layoutGroup.buttons[0].checked) layout = CaptureManager.Pip;
+            else if (layoutGroup.buttons[3].checked) layout = CaptureManager.NotVideo;
+
+            captureManager.playerLayout = layout;
+
+            if(captureManager.setCamera()){
+                mediaEngine.pause()
+                captureManager.startCameraRecording()
+            }
+        }
+    }
 }

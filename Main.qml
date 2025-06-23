@@ -32,7 +32,7 @@ ApplicationWindow {
                     mediaEngine.play()
                     var title = playlistModel.data(playlistModel.index(playlistModel.currentIndex,0),PlaylistModel.TitleRole)
                     if (title) {
-                        window.title = "Video Player - "+title
+                        window.title = "Video Player - " + title
                     }
                 }
             }
@@ -64,6 +64,10 @@ ApplicationWindow {
             actions.pauseCamera.enabled = (captureManager.cameraState !== CaptureManager.CameraStopped)
             actions.stopCamera.enabled = (captureManager.cameraState !== CaptureManager.CameraStopped)
             actions.pauseCamera.checked = (captureManager.cameraState === CaptureManager.CameraPaused)
+            if(captureManager.cameraState === CaptureManager.CameraStopped){
+                captureManager.playerLayout = CaptureManager.LayoutNull
+                content.player.cameraOutput.visible = false
+            }
         }
         onCameraRecordingTimeChanged: {
             var sec = captureManager.cameraRecordingTime
@@ -185,6 +189,7 @@ ApplicationWindow {
                 title: qsTr("Camera")
                 MenuItem { action: actions.camera }
                 MenuItem { action: actions.cameraDevice }
+                MenuItem { action: actions.recordingLayout }
                 MenuSeparator {}
                 MenuItem { action: actions.pauseCamera }
                 MenuItem { action: actions.stopCamera }
@@ -260,14 +265,19 @@ ApplicationWindow {
         saveLocation.onTriggered: content.dialogs.saveLocationDialog.open()
         camera.enabled: captureManager.hasCamera
         camera.onTriggered: {
-            if(captureManager.setCamera()){
+            if(captureManager.playerLayout === CaptureManager.LayoutNull){
+                content.dialogs.recordingLayoutDialog.open();
                 mediaEngine.pause()
-                captureManager.startCameraRecording()
             } else {
-                if (captureManager.availableCameras.length > 1) {
-                    content.dialogs.cameraSelectDialog.open()
-                } else if (captureManager.availableCameras.length === 1) {
-                    captureManager.selectCamera(captureManager.availableCameras[0].id)
+                if(captureManager.setCamera()){
+                    mediaEngine.pause()
+                    captureManager.startCameraRecording()
+                } else {
+                    if (captureManager.availableCameras.length > 1) {
+                        content.dialogs.cameraSelectDialog.open()
+                    } else if (captureManager.availableCameras.length === 1) {
+                        captureManager.selectCamera(captureManager.availableCameras[0].id)
+                    }
                 }
             }
         }
@@ -281,6 +291,7 @@ ApplicationWindow {
         stopCamera.onTriggered: captureManager.stopCameraRecording()
         cameraMicrophone.onTriggered: captureManager.cameraAudio = cameraMicrophone.checked
         cameraDevice.onTriggered: content.dialogs.cameraSelectDialog.open()
+        recordingLayout.onTriggered: content.dialogs.recordingLayoutDialog.open()
         fullScreen.onTriggered: { // 全屏
             if (!content.player.smallWindowMode) { // 小窗播放时不能全屏
                 window.showFullScreen()

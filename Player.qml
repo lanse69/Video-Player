@@ -117,21 +117,6 @@ Item {
         }
     }
 
-    VideoOutput {
-        id: _cameraOutput
-        anchors.fill: parent
-        visible: cameraActive
-    }
-
-    Connections {
-        target: captureManager
-        function onCameraChanged() {
-            if (captureManager && captureManager.cameraSession) {
-                captureManager.setVideoSink(_cameraOutput.videoSink)
-            }
-        }
-    }
-
     // 小窗
     Window {
         id: smallWindow
@@ -257,5 +242,102 @@ Item {
             smallWindow.hide()
             mediaEngine.setVideoSink(videoOutput.videoSink)
         }
+    }
+
+    VideoOutput {
+        id: _cameraOutput
+        anchors.fill: parent
+        visible: cameraActive
+    }
+
+    // Connections {
+    //     target: captureManager
+    //     function onCameraChanged() {
+    //         if (captureManager && captureManager.cameraSession) {
+    //             captureManager.setVideoSink(_cameraOutput.videoSink)
+    //         }
+    //     }
+    // }
+
+    // 录制布局
+    Item {
+        anchors.fill: parent
+        visible: cameraActive
+
+        // 左右布局
+        ColumnLayout {
+            id: leftRight
+            anchors.fill: parent
+            spacing: 5
+
+            VideoOutput {
+                id: leftMedia
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                fillMode: VideoOutput.PreserveAspectFit
+            }
+
+            VideoOutput {
+                id: rightCamera
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+        }
+
+        // 上下布局
+        RowLayout {
+            id: topBottom
+            anchors.fill: parent
+            spacing: 5
+
+            VideoOutput {
+                id: topMedia
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                fillMode: VideoOutput.PreserveAspectFit
+            }
+
+            VideoOutput {
+                id: bottomCamera
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+        }
+    }
+
+    Connections {
+        target: captureManager
+
+        function onPlayerLayoutChanged() {
+            closeVideo()
+            if(captureManager.playerLayout === CaptureManager.NotVideo){
+                captureManager.setVideoSink(_cameraOutput.videoSink)
+                _cameraOutput.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.LayoutNull){
+                mediaEngine.setVideoSink(videoOutput.videoSink)
+                videoOutput.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.SideBySide) {
+                mediaEngine.setVideoSink(leftMedia.videoSink)
+                captureManager.setVideoSink(rightCamera.videoSink)
+                leftRight.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.TopBottom) {
+                mediaEngine.setVideoSink(topMedia.videoSink)
+                captureManager.setVideoSink(bottomCamera.videoSink)
+                topBottom.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.Pip){
+                mediaEngine.setVideoSink(smallVideoOutput.videoSink)
+                captureManager.setVideoSink(_cameraOutput.videoSink)
+                _cameraOutput.visible = true
+                smallWindow.show()
+            }
+        }
+    }
+
+    function closeVideo(){
+        videoOutput.visible = false
+        _cameraOutput.visible = false
+        smallWindow.hide()
+        leftRight.visible = false
+        topBottom.visible = false
     }
 }

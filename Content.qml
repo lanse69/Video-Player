@@ -31,14 +31,15 @@ Item {
             target: parent
 
             onPointChanged: {
+                if(captureManager.playerLayout !== CaptureManager.NotVideo){
                     // 当鼠标靠近右侧时显示播放列表
-                    playlist.visible = (point.position.x > parent.width *(3/4))&&!searchList.visible&&searchBox.length===0
-                    searchBox.visible=(point.position.x > parent.width *(3/4))
-                    searchList.visible=(point.position.x > parent.width *(3/4))&&!playlist.visible&&searchBox.length!==0
-                    playlistcurtain.visible=(point.position.x > parent.width *(3/4))
-                    // 当鼠标靠近底部时显示控制栏
-                    controlBar.visible = (point.position.y > parent.height - 100)
-
+                    playlist.visible = (point.position.x > parent.width *(3/4))&&!searchList.visible&&searchBox.length===0&&(point.position.y <= parent.height - 50)
+                    searchBox.visible=(point.position.x > parent.width *(3/4))&&(point.position.y <= parent.height - 50)
+                    searchList.visible=(point.position.x > parent.width *(3/4))&&!playlist.visible&&searchBox.length!==0&&(point.position.y <= parent.height - 50)
+                    playlistcurtain.visible=(point.position.x > parent.width *(3/4))&&(point.position.y <= parent.height - 50)
+                }
+                // 当鼠标靠近底部时显示控制栏
+                controlBar.visible = (point.position.y > parent.height - 50)
             }
         }
     }
@@ -55,16 +56,16 @@ Item {
         placeholderTextColor: "gray"
         focus: true
 
-        Keys.onPressed: (event)=>{
-                            //确保输入合法
-                            if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
-                                event.accepted=true
-                            }
-                            //确保输入内容的大小
-                            if(length>=10&&event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
-                                event.accepted=true
-                            }
-                        }
+        Keys.onPressed: function (event){
+            //确保输入合法
+            if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                event.accepted=true
+            }
+            //确保输入内容的大小
+            if(length>=10&&event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                event.accepted=true
+            }
+        }
 
         onTextChanged: {
             //根据搜索框的状态改变列表视图
@@ -89,7 +90,7 @@ Item {
         anchors {
             top: searchBox.bottom
             right: parent.right
-            bottom: parent.bottom
+            bottom: _controlBar.top
         }
         playlist: content.playlistModel
     }
@@ -100,7 +101,7 @@ Item {
         anchors {
             top: searchBox.bottom
             right: parent.right
-            bottom: parent.bottom
+            bottom: _controlBar.top
         }
         visible: false
         playlist: searchlistModel

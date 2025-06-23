@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "DanmuRender.js" as DanmuRender
 
 Rectangle {
     property MediaEngine mediaEngine
@@ -152,6 +153,10 @@ Rectangle {
                         mediaEngine.setPosition(dragValue)
                     }
                     thumbnailPopup.close()
+
+                    DanmuRender.endDanmus()//松开刷新弹幕
+                    content.danmuManager.initDanmus(window.title.replace(/^[^-]*-/,""))
+                    content.danmuManager.initTracks(content.height*(1/4))
                 }
             }
 

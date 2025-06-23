@@ -34,6 +34,8 @@ ApplicationWindow {
                     if (title) {
                         window.title = "Video Player - " + title
                     }
+                    content.danmuManager.initDanmus(title)
+                    content.danmuManager.initTracks(content.height*(1/4))
                 }
             }
         }
@@ -111,14 +113,14 @@ ApplicationWindow {
                     model:histroyListModel
                     delegate:MenuItem{
                         action:Action {
-                                id:_histroy
-                                property string url:model.url
-                                text: qsTr("")
-                                onTriggered: {
-                                    let urls=[url]
-                                    playlistModel.addMedias(urls)
-                                }
+                            id:_histroy
+                            property string url:model.url
+                            text: qsTr("")
+                            onTriggered: {
+                                let urls=[url]
+                                playlistModel.addMedias(urls)
                             }
+                        }
                         text: model.title
                     }
                 }
@@ -198,6 +200,34 @@ ApplicationWindow {
             }
             MenuSeparator {}
             MenuItem { action: actions.saveLocation }
+        }
+        Menu{
+            title:"Danmu"
+            MenuItem{
+                TextArea{
+                    id:danmuInputBox
+                    anchors.fill: parent
+                    readOnly: !content.mediaEngine.play
+                    placeholderText: "请输入搜索内容(限100字)"
+                    placeholderTextColor: "gray"
+                    Keys.onPressed: function(event) {
+                        //输入回车键提交弹幕
+                        if(event.key===Qt.Key_Enter||event.key===Qt.Key_Return){
+                            content.danmuManager.addDanmu(content.mediaEngine.position,danmuInputBox.text)
+                            danmuInputBox.text=""
+                        }
+
+                        //确保输入合法
+                        if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                            event.accepted=true
+                        }
+                        //确保输入内容的大小
+                        if(length>=100&&event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                            event.accepted=true
+                        }
+                    }
+                }
+            }
         }
 
         Menu {

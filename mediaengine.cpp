@@ -20,6 +20,10 @@ MediaEngine::MediaEngine(QObject *parent)
     , m_hasSubtitle{false}
     , m_subtitleVisible{true}
     , m_userMutedSubtitle{false}
+    , m_playbackMode{Sequential}
+    , m_playbackFinished{false}
+    , m_thumbnailPlayer{nullptr}
+    , m_thumbnailSink{nullptr}
 {
     m_player = new QMediaPlayer(this);
     m_audioOutput = new QAudioOutput(this);

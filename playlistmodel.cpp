@@ -4,7 +4,7 @@
 #include <QFile>
 #include <QRandomGenerator>
 
-PlaylistModel::PlaylistModel(QObject *parent) : QAbstractListModel(parent)
+PlaylistModel::PlaylistModel(QObject *parent) : QAbstractListModel(parent), m_currentIndex{-1}
 {
     avformat_network_init();
 }
@@ -150,7 +150,7 @@ QList<QUrl> PlaylistModel::search(
 
 void PlaylistModel::histroy()
 {
-    QFile file("./histroy.txt");
+    QFile file("histroy.txt");
     QList<QUrl> readFile;
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&file);
@@ -195,7 +195,7 @@ void PlaylistModel::setHistroy(QUrl url)
     if (file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
         QTextStream out(&file);
         for (auto &i : readFile) {
-            out << i.toString() << Qt::endl;
+            out << i.toString() << '\n';
         }
         file.close();
     } else {

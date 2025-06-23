@@ -218,12 +218,12 @@ Item {
         }
 
         onAccepted: {
-           if (cameraComboBox.currentIndex >= 0) {
-               var device = cameraComboBox.model[cameraComboBox.currentIndex]
-               captureManager.selectCamera(device.id)
-           }
-       }
-   }
+            if (cameraComboBox.currentIndex >= 0) {
+                var device = cameraComboBox.model[cameraComboBox.currentIndex]
+                captureManager.selectCamera(device.id)
+            }
+        }
+    }
 
     // 录制布局选择对话框
     Dialog {

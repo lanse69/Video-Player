@@ -114,9 +114,9 @@ private:
     bool m_subtitleVisible;
     QMap<qint64, QPair<qint64, QString>> m_subtitles;
     bool m_userMutedSubtitle;
-    PlaybackMode m_playbackMode = Sequential; // 视频播放模式
-    bool m_playbackFinished = false;          // 视频是否结束
+    PlaybackMode m_playbackMode; // 视频播放模式
+    bool m_playbackFinished;     // 视频是否结束
 
-    QMediaPlayer *m_thumbnailPlayer = nullptr; // 缩略图专用播放器
-    QVideoSink *m_thumbnailSink = nullptr;     // 缩略图专用视频接收器
+    QMediaPlayer *m_thumbnailPlayer; // 缩略图专用播放器
+    QVideoSink *m_thumbnailSink;     // 缩略图专用视频接收器
 };

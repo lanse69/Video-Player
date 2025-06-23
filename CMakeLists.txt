@@ -33,16 +33,12 @@ qt_add_qml_module(appVideo-Player
         Content.qml
         ControlBar.qml
     RESOURCES resources.qrc
-<<<<<<< HEAD
     SOURCES danmu.h danmu.cpp
     SOURCES font.h font.cpp
     SOURCES danmutrack.h danmutrack.cpp
     SOURCES danmumanager.h danmumanager.cpp
-    QML_FILES
     QML_FILES Danmu.qml
     QML_FILES DanmuRender.js
-=======
->>>>>>> refs/remotes/origin/main
 )
 
 target_compile_features(appVideo-Player PRIVATE cxx_std_23)

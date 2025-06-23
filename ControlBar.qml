@@ -32,6 +32,7 @@ Rectangle {
                 }
             }
         }
+
         // 播放和停止
         ToolButton {
             id: startandpause
@@ -64,6 +65,7 @@ Rectangle {
             }
         }
 
+        // 播放模式
         ToolButton {
             id: playbackModeButton
             text: {
@@ -166,7 +168,7 @@ Rectangle {
 
             Connections {
                 target: positionSlider
-                function onMoved() {
+                function onMoved() { // 移动时生成缩略图
                     if (mediaEngine) {
                         thumbnailImage.source = mediaEngine.getFrameAtPosition(positionSlider.dragValue);
                     }
@@ -213,6 +215,7 @@ Rectangle {
 
         // 时间显示
         Label {
+            color: "white"
             text: {
                 if (!mediaEngine) return "00:00 / 00:00"
 

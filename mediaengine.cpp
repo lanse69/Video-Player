@@ -461,11 +461,14 @@ QString MediaEngine::getFrameAtPosition(qint64 position)
 
     // 连接信号以等待帧可用
     QEventLoop loop;
+    QTimer::singleShot(100, &loop, &QEventLoop::quit); // 超时保护，防止等待帧的时间过长而导致界面卡死
     QObject::connect(m_thumbnailSink, &QVideoSink::videoFrameChanged, &loop, &QEventLoop::quit);
     m_thumbnailPlayer->setPosition(position);
     m_thumbnailPlayer->play();
     loop.exec(QEventLoop::ExcludeUserInputEvents); // 非阻塞式等待
+    QObject::disconnect(m_thumbnailSink, &QVideoSink::videoFrameChanged, &loop, &QEventLoop::quit);
     QVideoFrame frame = m_thumbnailSink->videoFrame();
+    m_thumbnailPlayer->pause();
 
     if (!frame.isValid()) {
         m_thumbnailPlayer->setSource(QUrl());

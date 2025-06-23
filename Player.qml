@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import QtMultimedia
 import VideoPlayer
 
@@ -11,6 +12,7 @@ Item {
     property real targetAspectRatio: 0  // 0为原始比例, 16/9为16:9, 4/3为4:3
     property bool cameraActive: captureManager ? captureManager.cameraState !== CaptureManager.CameraStopped : false
     property alias cameraOutput: _cameraOutput
+    property bool smallWindowMode: false // 是否为小窗播放
 
     Item {
         id: _videoContainer
@@ -127,6 +129,133 @@ Item {
             if (captureManager && captureManager.cameraSession) {
                 captureManager.setVideoSink(_cameraOutput.videoSink)
             }
+        }
+    }
+
+    // 小窗
+    Window {
+        id: smallWindow
+        width: 320
+        height: 180
+        flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+        color: "transparent"
+        visible: smallWindowMode
+
+        DragHandler { // 拖动
+            onActiveChanged: if (active) smallWindow.startSystemMove()
+        }
+
+        // 视频容器
+        Rectangle {
+            anchors.fill: parent
+            color: "#66000000"
+            radius: 5
+
+            VideoOutput {
+                id: smallVideoOutput
+                anchors.fill: parent
+                fillMode: VideoOutput.PreserveAspectFit
+            }
+
+            // 字幕显示区域
+            Rectangle {
+                id: smallSubtitleContainer
+                anchors {
+                    bottom: smallControlBar.top
+                    left: parent.left
+                    right: parent.right
+                    margins: 5
+                }
+                height: smallSubtitleText.height + 10
+                color: "transparent"
+                visible: subtitleVisible && currentSubtitle !== ""
+
+                Text {
+                    id: smallSubtitleText
+                    anchors.centerIn: parent
+                    text: currentSubtitle
+                    color: "white"
+                    font.pixelSize: 14
+                    style: Text.Outline
+                    styleColor: "black"
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    width: parent.width * 0.9
+                }
+            }
+
+            HoverHandler { // 鼠标悬停显示控制条
+                acceptedDevices: PointerDevice.Mouse
+                onHoveredChanged: {
+                    smallControlBar.visible = hovered ? true : false
+                }
+            }
+
+            // 控制栏
+            Rectangle {
+                id: smallControlBar
+                anchors.bottom: parent.bottom
+                height: 25
+                width: parent.width
+                color: "#80000000"
+                visible: false
+
+                RowLayout {
+                    // 播放和停止
+                    ToolButton {
+                        id: startandpause
+                        icon.name: mediaEngine.playing ? "media-playback-pause" : "media-playback-start"
+                        onClicked: {
+                            if(mediaEngine){
+                                mediaEngine.playing ? mediaEngine.pause() : mediaEngine.play()
+                            }
+                        }
+                    }
+
+                    // 进度条
+                    Slider {
+                        Layout.fillWidth: true
+                        from: 0
+                        to: mediaEngine.duration
+                        value: mediaEngine.position
+                        onMoved: mediaEngine.setPosition(value)
+                    }
+
+                    // 时间显示
+                    Label {
+                        color: "white"
+                        text: {
+                            if (!mediaEngine) return "00:00 / 00:00"
+                            var currentSec = Math.floor(mediaEngine.position / 1000)
+                            var totalSec = Math.floor(mediaEngine.duration / 1000)
+                            return formatTime(currentSec) + " / " + formatTime(totalSec)
+                        }
+
+                        function formatTime(seconds) {
+                            var minutes = Math.floor(seconds / 60)
+                            var secs = seconds % 60
+                            return minutes.toString().padStart(2, '0') + ":" + secs.toString().padStart(2, '0')
+                        }
+                    }
+
+                    // 关闭按钮
+                    ToolButton {
+                        id: closeBtn
+                        icon.name: "edit-delete-remove"
+                        onClicked: smallWindowMode = false
+                    }
+                }
+            }
+        }
+    }
+
+    onSmallWindowModeChanged: {
+        if (smallWindowMode) {
+            smallWindow.show()
+            mediaEngine.setVideoSink(smallVideoOutput.videoSink)
+        } else {
+            smallWindow.hide()
+            mediaEngine.setVideoSink(videoOutput.videoSink)
         }
     }
 }

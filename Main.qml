@@ -9,7 +9,7 @@ ApplicationWindow {
     id: window
     width: 800
     height: 600
-    visible: true
+    visible: !content.player.smallWindowMode // 当小窗口显示时，大窗口不显示
     title: "Video Player"
 
     // 媒体引擎
@@ -156,6 +156,8 @@ ApplicationWindow {
             title: qsTr("View")
             MenuItem { action: actions.fullScreen }
             MenuItem { action: actions.exitFullScreen }
+            MenuSeparator {}
+            MenuItem { action: actions.smallWindowMode }
             MenuSeparator {}
             Menu {
                 title: qsTr("Video Scale")
@@ -310,12 +312,16 @@ ApplicationWindow {
         cameraMicrophone.onTriggered: captureManager.cameraAudio = cameraMicrophone.checked
         cameraDevice.onTriggered: content.dialogs.cameraSelectDialog.open()
         fullScreen.onTriggered: { // 全屏
-            window.showFullScreen()
-            menu.visible = false
+            if (!content.player.smallWindowMode) { // 小窗播放时不能全屏
+                window.showFullScreen()
+                menu.visible = false
+            }
         }
         exitFullScreen.onTriggered: { // 退出全屏
-            window.showNormal()
-            menu.visible = true
+            if (!content.player.smallWindowMode) { // 小窗播放时不能退出全屏
+                window.showNormal()
+                menu.visible = true
+            }
         }
         loopPlayback.onTriggered: mediaEngine.setPlaybackMode(MediaEngine.Loop)
         sequentialPlayback.onTriggered: mediaEngine.setPlaybackMode(MediaEngine.Sequential)
@@ -323,6 +329,7 @@ ApplicationWindow {
         originalAspectRatio.onTriggered: content.player.targetAspectRatio = 0
         aspectRatio16_9.onTriggered: content.player.targetAspectRatio = 16/9
         aspectRatio4_3. onTriggered: content.player.targetAspectRatio = 4/3
+        smallWindowMode.onTriggered: content.player.smallWindowMode = true
     }
 
     Content {
@@ -346,7 +353,7 @@ ApplicationWindow {
         }
     }
 
-    Connections {
+    Connections { // 连接视频结束的信号
         target: mediaEngine
 
         function onPlaybackFinishedChanged() {
@@ -399,6 +406,43 @@ ApplicationWindow {
             if (type === CaptureManager.FullScreenCapture) {
                 captureManager.captureScreenshot(CaptureManager.FullScreenCapture)
             }
+        }
+    }
+
+    // 拖放处理器
+    DragDropManager {
+        id: dragHandler
+        onFilesDropped: function (urls) {
+            playlistModel.addMedias(urls)
+            // 添加到历史记录
+            for (var j = 0; j < urls.length; j++) {
+                histroyListModel.setHistroy(urls[j])
+            }
+            // 如果当前没有播放，则播放第一个
+            if (playlistModel.rowCount > 0 && !mediaEngine.playing) {
+                playlistModel.currentIndex = 0
+            }
+        }
+
+        Component.onCompleted: setWindow(window)
+    }
+
+    // 拖放区域视觉反馈
+    Rectangle {
+        id: dragRect
+        anchors.fill: parent
+        color: "#4000aaff"
+        border.color: "#0088ff"
+        border.width: 4
+        radius: 8
+        visible: dragHandler.dragActive
+        // visible: dropArea.containsDrag
+
+        Label {
+            anchors.centerIn: parent
+            text: "拖放音视频文件到此处"
+            font.pixelSize: 28
+            color: "white"
         }
     }
 }

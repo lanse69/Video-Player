@@ -20,17 +20,19 @@ qt_add_qml_module(appVideo-Player
         mediaengine.h mediaengine.cpp
         playlistmodel.h playlistmodel.cpp
         capturemanager.h capturemanager.cpp
-    QML_FILES Main.qml
-    QML_FILES Actions.qml
-    QML_FILES Dialogs.qml
-    QML_FILES Player.qml
-    QML_FILES Playlist.qml
-    QML_FILES Content.qml
-    QML_FILES ControlBar.qml
+        dragdropmanager.h dragdropmanager.cpp
+        danmu.h danmu.cpp
+        font.h font.cpp
+        danmutrack.h danmutrack.cpp
+    QML_FILES
+        Main.qml
+        Actions.qml
+        Dialogs.qml
+        Player.qml
+        Playlist.qml
+        Content.qml
+        ControlBar.qml
     RESOURCES resources.qrc
-    SOURCES danmu.h danmu.cpp
-    SOURCES font.h font.cpp
-    SOURCES danmutrack.h danmutrack.cpp
 )
 
 target_compile_features(appVideo-Player PRIVATE cxx_std_23)

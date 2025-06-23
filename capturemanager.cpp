@@ -343,11 +343,9 @@ QMediaCaptureSession *CaptureManager::cameraSession() const
 
 QVariantList CaptureManager::availableCameras()
 {
-    if (m_availableCameras.isEmpty()) {
-        m_availableCameras = QMediaDevices::videoInputs();
-        emit availableCamerasChanged();
-        emit hasCameraChanged();
-    }
+    m_availableCameras = QMediaDevices::videoInputs();
+    emit availableCamerasChanged();
+    emit hasCameraChanged();
 
     QVariantList list;
     for (auto &device : m_availableCameras) {
@@ -415,6 +413,31 @@ void CaptureManager::setupCameraRecorder()
     m_cameraRecorder->setVideoResolution(QGuiApplication::primaryScreen()->size());
     m_cameraRecorder->setQuality(QMediaRecorder::HighQuality);
 
+    connect(m_cameraRecorder,
+            &QMediaRecorder::errorOccurred,
+            this,
+            [this](QMediaRecorder::Error error, const QString &errorString) { emit errorOccurred(errorString); });
+
+    connect(m_camera, &QCamera::errorOccurred, this, [this](QCamera::Error error, const QString &errorString) {
+        emit errorOccurred(errorString);
+    });
+
+    emit cameraSessionChanged();
+}
+
+void CaptureManager::startCameraRecording()
+{
+    if (m_cameraState != CameraStopped || !m_camera) return;
+
+    // 创建保存路径
+    QString dirPath = generateFilePath(Record);
+    QDir dir(dirPath);
+    if (!dir.exists()) dir.mkpath(".");
+    QString fileName = dirPath + QDir::separator() + "camera_"
+                       + QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss") + ".mp4";
+
+    m_cameraRecorder->setOutputLocation(QUrl::fromLocalFile(fileName));
+
     if (m_cameraAudio) {
         m_cameraAudioInput = new QAudioInput(this);
 
@@ -430,63 +453,6 @@ void CaptureManager::setupCameraRecorder()
         m_cameraAudioInput->setVolume(0.8);
         m_cameraSession->setAudioInput(m_cameraAudioInput);
     }
-
-    connect(m_cameraRecorder,
-            &QMediaRecorder::errorOccurred,
-            this,
-            [this](QMediaRecorder::Error error, const QString &errorString) { emit errorOccurred(errorString); });
-
-    connect(m_camera, &QCamera::errorOccurred, this, [this](QCamera::Error error, const QString &errorString) {
-        emit errorOccurred(errorString);
-    });
-
-    emit cameraSessionChanged();
-}
-
-void CaptureManager::cleanupCameraRecorder()
-{
-    if (m_cameraRecorder) {
-        m_cameraRecorder->stop();
-        m_cameraSession->setRecorder(nullptr);
-        delete m_cameraRecorder;
-        m_cameraRecorder = nullptr;
-    }
-
-    if (m_imageCapture) {
-        m_cameraSession->setImageCapture(nullptr);
-        delete m_imageCapture;
-        m_imageCapture = nullptr;
-    }
-
-    if (m_camera) {
-        m_camera->stop();
-        m_cameraSession->setCamera(nullptr);
-        delete m_camera;
-        m_camera = nullptr;
-    }
-
-    if (m_cameraAudioInput) {
-        m_cameraSession->setAudioInput(nullptr);
-        delete m_cameraAudioInput;
-        m_cameraAudioInput = nullptr;
-    }
-
-    m_cameraState = CameraStopped;
-    emit cameraStateChanged();
-}
-
-void CaptureManager::startCameraRecording()
-{
-    if (m_cameraState != CameraStopped || !m_camera) return;
-
-    // 创建保存路径
-    QString dirPath = generateFilePath(Record);
-    QDir dir(dirPath);
-    if (!dir.exists()) dir.mkpath(".");
-    QString fileName = dirPath + QDir::separator() + "camera_"
-                       + QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss") + ".mp4";
-
-    m_cameraRecorder->setOutputLocation(QUrl::fromLocalFile(fileName));
 
     m_camera->start();
     m_cameraState = CameraRecording;
@@ -533,6 +499,38 @@ void CaptureManager::stopCameraRecording()
     emit cameraRecordingTimeChanged();
 
     cleanupCameraRecorder();
+}
+
+void CaptureManager::cleanupCameraRecorder()
+{
+    if (m_cameraRecorder) {
+        m_cameraRecorder->stop();
+        m_cameraSession->setRecorder(nullptr);
+        delete m_cameraRecorder;
+        m_cameraRecorder = nullptr;
+    }
+
+    if (m_imageCapture) {
+        m_cameraSession->setImageCapture(nullptr);
+        delete m_imageCapture;
+        m_imageCapture = nullptr;
+    }
+
+    if (m_camera) {
+        m_camera->stop();
+        m_cameraSession->setCamera(nullptr);
+        delete m_camera;
+        m_camera = nullptr;
+    }
+
+    if (m_cameraAudioInput) {
+        m_cameraSession->setAudioInput(nullptr);
+        delete m_cameraAudioInput;
+        m_cameraAudioInput = nullptr;
+    }
+
+    m_cameraState = CameraStopped;
+    emit cameraStateChanged();
 }
 
 CaptureManager::CameraState CaptureManager::cameraState() const

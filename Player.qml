@@ -158,31 +158,31 @@ Item {
             }
 
             // 字幕显示区域
-                Rectangle {
-                    id: smallSubtitleContainer
-                    anchors {
-                        bottom: smallControlBar.top
-                        left: parent.left
-                        right: parent.right
-                        margins: 5
-                    }
-                    height: smallSubtitleText.height + 10
-                    color: "transparent"
-                    visible: subtitleVisible && currentSubtitle !== ""
-
-                    Text {
-                        id: smallSubtitleText
-                        anchors.centerIn: parent
-                        text: currentSubtitle
-                        color: "white"
-                        font.pixelSize: 14
-                        style: Text.Outline
-                        styleColor: "black"
-                        horizontalAlignment: Text.AlignHCenter
-                        wrapMode: Text.WordWrap
-                        width: parent.width * 0.9
-                    }
+            Rectangle {
+                id: smallSubtitleContainer
+                anchors {
+                    bottom: smallControlBar.top
+                    left: parent.left
+                    right: parent.right
+                    margins: 5
                 }
+                height: smallSubtitleText.height + 10
+                color: "transparent"
+                visible: subtitleVisible && currentSubtitle !== ""
+
+                Text {
+                    id: smallSubtitleText
+                    anchors.centerIn: parent
+                    text: currentSubtitle
+                    color: "white"
+                    font.pixelSize: 14
+                    style: Text.Outline
+                    styleColor: "black"
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    width: parent.width * 0.9
+                }
+            }
 
             HoverHandler { // 鼠标悬停显示控制条
                 acceptedDevices: PointerDevice.Mouse

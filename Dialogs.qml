@@ -12,6 +12,7 @@ Item {
     property alias previewDialog: _previewDialog
     property alias errorDialog: _errorDialog
     property alias saveLocationDialog: _saveLocationDialog
+    property alias cameraSelectDialog: _cameraSelectDialog
 
     FileDialog {
         id: _fileOpen
@@ -37,8 +38,6 @@ Item {
         title: "Screenshot Preview"
         modal: true
         standardButtons: Dialog.Save | Dialog.Discard
-        // Layout.fillWidth: parent.width
-        // Layout.fillHeight: parent.height
 
         background: Rectangle {
             color: "black"
@@ -99,7 +98,7 @@ Item {
 
     Dialog {
         id: _saveLocationDialog
-        title: "截图与录屏保存位置"
+        title: "截图与录制保存位置"
         width: 500
         height: 300
         modal: true
@@ -117,15 +116,15 @@ Item {
                 Label {
                     text: "截图保存位置:"
                     font.bold: true
-                    color: "#3498db"
+                    color: "red"
                 }
 
                 Rectangle {
                     Layout.fillWidth: true
                     height: 40
-                    color: "#f5f5f5"
+                    color: "white"
                     radius: 5
-                    border.color: "#ddd"
+                    border.color: "gray"
 
                     Label {
                         anchors.fill: parent
@@ -137,23 +136,23 @@ Item {
                 }
             }
 
-            // 录屏路径
+            // 录制路径
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 5
 
                 Label {
-                    text: "录屏保存位置:"
+                    text: "录制保存位置:"
                     font.bold: true
-                    color: "#e74c3c"
+                    color: "red"
                 }
 
                 Rectangle {
                     Layout.fillWidth: true
                     height: 40
-                    color: "#f5f5f5"
+                    color: "white"
                     radius: 5
-                    border.color: "#ddd"
+                    border.color: "gray"
 
                     Label {
                         anchors.fill: parent
@@ -164,6 +163,60 @@ Item {
                     }
                 }
             }
+
+            Label {
+                text: "麦克风的选项是决定是否录制时是否录音\n只有在录制前的选择才可改变，录制中更改无法改变"
+                font.bold: true
+                color: "red"
+            }
         }
     }
+
+    Dialog {
+        id: _cameraSelectDialog
+        title: "Select Camera"
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        ColumnLayout {
+            width: parent.width
+
+            Label {
+                text: "Available Cameras:"
+                font.bold: true
+            }
+
+            ComboBox {
+                id: cameraComboBox
+                Layout.fillWidth: true
+                textRole: "description"
+            }
+
+            Label {
+                visible: cameraComboBox.count === 0
+                text: "No cameras found"
+                color: "red"
+            }
+
+            Button {
+                text: "flush available"
+                Layout.alignment: Qt.AlignRight
+
+                onClicked: {
+                    cameraComboBox.model = captureManager.availableCameras
+                }
+            }
+        }
+
+        onOpened: {
+            cameraComboBox.model = captureManager ? captureManager.availableCameras : []
+        }
+
+        onAccepted: {
+           if (cameraComboBox.currentIndex >= 0) {
+               var device = cameraComboBox.model[cameraComboBox.currentIndex]
+               captureManager.selectCamera(device.id)
+           }
+       }
+   }
 }

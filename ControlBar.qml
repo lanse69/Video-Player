@@ -155,7 +155,7 @@ Rectangle {
                     thumbnailPopup.close()
 
                     DanmuRender.endDanmus()//松开刷新弹幕
-                    content.danmuManager.initDanmus(window.title.replace(/^[^-]*-/,""))
+                    content.danmuManager.initDanmus(window.title.replace(/^[^-]*-\x20/,""))//通过正则表达式处理窗口标题得到正在播放的视频的标题
                     content.danmuManager.initTracks(content.height*(1/4))
                 }
             }

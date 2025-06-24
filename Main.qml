@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtMultimedia
 import VideoPlayer
 import QtQuick.Dialogs
+import "DanmuRender.js" as DanmuRender
 
 ApplicationWindow {
     id: window
@@ -202,7 +203,7 @@ ApplicationWindow {
                 TextArea{
                     id:danmuInputBox
                     anchors.fill: parent
-                    readOnly: !content.mediaEngine.play
+                    readOnly: !content.mediaEngine.playing      //当视频没有播放时不能输入弹幕
                     placeholderText: "请输入搜索内容(限100字)"
                     placeholderTextColor: "gray"
                     Keys.onPressed: (event)=>{
@@ -222,6 +223,11 @@ ApplicationWindow {
                                         }
                                     }
                 }
+            }
+            Menu{
+                title:"字体大小"
+                MenuItem{action: actions.bigDanmu}
+                MenuItem{action: actions.smallDanmu}
             }
         }
 
@@ -330,6 +336,18 @@ ApplicationWindow {
         aspectRatio16_9.onTriggered: content.player.targetAspectRatio = 16/9
         aspectRatio4_3. onTriggered: content.player.targetAspectRatio = 4/3
         smallWindowMode.onTriggered: content.player.smallWindowMode = true
+        smallDanmu.onTriggered:{
+            DanmuRender.smallDanmu()
+            DanmuRender.endDanmus()
+            content.danmuManager.initDanmus(window.title.replace(/^[^-]*-\x20/,""))
+            content.danmuManager.initTracks(content.height*(1/4))
+        }
+        bigDanmu.onTriggered:{
+            DanmuRender.bigDanmu()
+            DanmuRender.endDanmus()
+            content.danmuManager.initDanmus(window.title.replace(/^[^-]*-\x20/,""))
+            content.danmuManager.initTracks(content.height*(1/4))
+        }
     }
 
     Content {

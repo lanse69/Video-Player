@@ -24,11 +24,12 @@ void DanmuManager::initDanmus(
         return;
     }
     QTextStream in(&file);
-    while (!file.atEnd()) {
+    while (!in.atEnd()) {
         qint64 startTime = 0;
         QString content;
         QString line = in.readLine();
 
+        qDebug() << line;
         //读入每行的开始时间和内容
         bool ok;
         startTime = line.section(" ", 0, 0).toLongLong(&ok);
@@ -103,7 +104,7 @@ QList<QList<QVariant>> DanmuManager::danmus(
     QFontMetrics fontMetrics(font);
 
     //初始化备选列表
-    QList<Danmu> option;
+    QList<Danmu *> option;
     auto it = std::lower_bound(m_danmus.begin(), //用二分查找寻找第一个大于等于当前时间的弹幕
                                m_danmus.end(),
                                currentTime + 1000,
@@ -118,24 +119,28 @@ QList<QList<QVariant>> DanmuManager::danmus(
                                      < b; //currentTime-width/m_speed：屏幕出现的弹幕的最小开始时间
                           });
     int left = std::distance(m_danmus.begin(), it); //获取备选的左边界
-    option = m_danmus.mid(left, right - left + 1);
+    for (int i = left; i < right; i++) {
+        option.append(&m_danmus[i]);
+    }
     //分配弹幕
-    for (Danmu &i : option) {
-        if (i.isAllocate)
+    for (Danmu *i : option) {
+        if (i->m_isAllocate)
             continue;
         for (DanmuTrack &j : m_danmuTracks) { //从列表里获取可置入的轨道
-            if (i.m_sendTime > j.m_lastTime) {
-                int fontWidth = fontMetrics.horizontalAdvance(i.m_content);
-                int x = width - (currentTime - i.m_sendTime) * m_speed;
-                j.m_lastTime = i.m_sendTime + fontWidth / m_speed; //更新轨道最后弹幕的结束时间
+            if (i->m_sendTime > j.m_lastTime) {
+                int fontWidth = fontMetrics.horizontalAdvance(i->m_content);
+                int x = width - (currentTime - i->m_sendTime) * m_speed;
+                j.m_lastTime = i->m_sendTime + fontWidth / m_speed
+                               + 100; //更新轨道最后弹幕的结束时间,加100,增加弹幕之间的间隔
                 ans.append(QList<QVariant>{
                     QVariant{x},                        //弹幕的起始x坐标
                     QVariant{j.m_y},                    //弹幕的x坐标
                     QVariant{-fontWidth},               //结束位置
-                    QVariant{i.m_content},              //内容
+                    QVariant{i->m_content},             //内容
                     QVariant{(x + fontWidth) / m_speed} //持续时间
                 });
                 num--;
+                i->m_isAllocate = true;
                 if (num == 0)
                     return ans; //分配了足够的弹幕，直接返回
                 break;

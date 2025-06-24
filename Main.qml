@@ -244,7 +244,7 @@ ApplicationWindow {
 
         Menu {
             title: qsTr("Help")
-            MenuItem { action: actions.aboutQt }
+            MenuItem { action: actions.about}
             MenuSeparator {}
             MenuItem { action: actions.saveLocation }
             MenuItem { action: actions.attention }
@@ -287,7 +287,7 @@ ApplicationWindow {
                 playlistModel.currentIndex = newIndex
             }
         }
-        aboutQt.onTriggered: content.dialogs.aboutQt.open()
+        about.onTriggered: content.dialogs.about.open()
         zeroPointFiveRate.onTriggered: mediaEngine.setPlaybackRate(0.5)
         oneRate.onTriggered: mediaEngine.setPlaybackRate(1)
         onePointFiveRate.onTriggered: mediaEngine.setPlaybackRate(1.5)
@@ -396,13 +396,48 @@ ApplicationWindow {
                     menuBar.visible = false // 进入全屏时隐藏菜单栏
                 }
             }
+
+            onTapped: { // 单击暂停播放或开始播放
+                mediaEngine.playing ? mediaEngine.pause() : mediaEngine.play()
+            }
+        }
+
+        // 滑动切换视频
+        DragHandler {
+            id: slideHandler
+            target: null
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen
+
+            onActiveChanged: {
+                var startY = 0
+                var endY = 0
+                var isSlide = false
+                if (!active) {
+                    var distance = centroid.position.y - centroid.pressPosition.y
+                    if (Math.abs(distance) > 20) { // 滑动距离大于20像素才算滑动
+                        if (distance < 0) { // 向上滑动，下一个视频
+                            if (playlistModel.rowCount > 0) {
+                                var nextIndex = playlistModel.currentIndex + 1
+                                if (nextIndex >= playlistModel.rowCount) nextIndex = 0
+                                playlistModel.currentIndex = nextIndex
+                            }
+                        } else { // 向下滑动，上一个视频
+                            if (playlistModel.rowCount > 0) {
+                                var preIndex = playlistModel.currentIndex - 1
+                                if (preIndex < 0) preIndex = playlistModel.rowCount - 1
+                                playlistModel.currentIndex = preIndex
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
-    Connections { // 连接视频结束的信号
+    Connections {
         target: mediaEngine
 
-        function onPlaybackFinishedChanged() {
+        function onPlaybackFinishedChanged() { // 连接视频结束的信号
             if (mediaEngine.playbackFinished) { // 检查视频结束
                 switch(mediaEngine.playbackMode) { // 检查视频的播放模式
                     case MediaEngine.Sequential: // 顺序播放
@@ -427,6 +462,10 @@ ApplicationWindow {
                 }
                 mediaEngine.setPlaybackFinished(false) // 重置播放完成状态
             }
+        }
+
+        function onTimedPauseFinished() { // 连接定时暂停结束信号
+            content.dialogs.timedPauseFinishedDialog.open();
         }
     }
 

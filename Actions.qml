@@ -14,7 +14,7 @@ Item {
     property alias subtitle: _subtitle
     property alias previous: _previous
     property alias next: _next
-    property alias aboutQt: _aboutQt
+    property alias about: _about
     property alias zeroPointFiveRate: _zeroPointFiveRate
     property alias oneRate: _oneRate
     property alias onePointFiveRate: _onePointFiveRate
@@ -124,9 +124,9 @@ Item {
     }
 
     Action {
-        id: _aboutQt
-        text: qsTr("About Qt")
-        icon.name: "qtcreator"
+        id: _about
+        text: qsTr("About")
+        icon.name: "help-about"
     }
 
     Action {
@@ -307,7 +307,7 @@ Item {
     }
 
     Action {
-        id: _timedPause
-        text: "Timed Pause"
-    }
+         id: _timedPause
+         text: mediaEngine.pauseTimeRemaining ? mediaEngine.pauseCountdown() : "Timed Pause"
+     }
 }

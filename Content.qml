@@ -17,6 +17,23 @@ Item {
     property alias danmuGenerater: _danmuGenerater
     property alias downloadManager: _downloadManager
 
+    focus: true
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Left) {  // 左方向键，快退5秒
+            mediaEngine.setPosition(mediaEngine.position - 5000);
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Right) { // 右方向键，快进5秒
+            mediaEngine.setPosition(mediaEngine.position + 5000);
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Up) { // 上方向键，音量加5
+            mediaEngine.setVolume(mediaEngine.volume + 0.05);
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Down) { // 下方向键，音量减5
+            mediaEngine.setVolume(mediaEngine.volume - 0.05);
+            event.accepted = true;
+        }
+    }
+
     Dialogs {
         id: _dialogs
         captureManager: content.captureManager

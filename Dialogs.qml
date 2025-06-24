@@ -12,7 +12,7 @@ Item {
     property DownloadManager downloadManager
     property alias fileOpen: _fileOpen
     property alias urlInputDialog: _urlInputDialog
-    property alias aboutQt: _aboutQt
+    property alias about: _about
     property alias previewDialog: _previewDialog
     property alias errorDialog: _errorDialog
     property alias saveLocationDialog: _saveLocationDialog
@@ -21,6 +21,7 @@ Item {
     property alias timedPauseDialog: _timedPauseDialog
     property alias attentionDialog: _attentionDialog
     property alias downloadDialog: _downloadDialog
+    property alias timedPauseFinishedDialog: _timedPauseFinishedDialog
 
     FileDialog {
         id: _fileOpen
@@ -95,12 +96,16 @@ Item {
     }
 
     MessageDialog {
-        id: _aboutQt
-        title: qsTr("About Qt")
+        id: _about
+        title: qsTr("About")
         modality: Qt.WindowModal
         buttons: MessageDialog.Ok
         text: qsTr("This is a video player.")
         informativeText: qsTr("This application uses Qt version 6.9.1")
+        detailedText: "Copyright©2025
+                    \nLan yin yin(lan_yinyin@qq.com)
+                    \nZhou jun(zhoujun1108@126.com)
+                    \nZhu Can Yin(2892825621@qq.com)"
     }
 
     Dialog {
@@ -594,5 +599,17 @@ Item {
         interval: 2000
         running: timedPauseNotification.opened
         onTriggered: timedPauseNotification.close()
+    }
+
+    // 倒计时结束对话框
+    Dialog {
+        id: _timedPauseFinishedDialog
+        title: "Timed Pause"
+        modal: true
+        standardButtons: Dialog.Ok
+
+        Label {
+            text: "The timed pause period has ended."
+        }
     }
 }

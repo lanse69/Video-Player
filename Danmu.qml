@@ -34,7 +34,6 @@ Text {
         animation.to=endx
         animation.duration=time
         animation.start()
-        console.log(x,y,endx,content,time)
     }
     onVisibleChanged: {
         if(!visible){

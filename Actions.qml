@@ -29,6 +29,7 @@ Item {
     property alias stopCamera: _stopCamera
     property alias cameraMicrophone: _cameraMicrophone
     property alias cameraDevice: _cameraDevice
+    property alias recordingLayout: _recordingLayout
     property alias fullScreen: _fullScreen
     property alias exitFullScreen: _exitFullScreen
     property alias loopPlayback: _loopPlayback
@@ -40,6 +41,7 @@ Item {
     property alias smallWindowMode: _smallWindowMode
     property alias bigDanmu: _bigDanmu
     property alias smallDanmu:_smallDanmu
+    property alias timedPause: _timedPause
 
     Action {
         id: _open
@@ -208,6 +210,12 @@ Item {
     }
 
     Action {
+        id: _recordingLayout
+        text: qsTr("Select Camera Layout")
+        icon.name: "labplot-editbreaklayout"
+    }
+
+    Action {
         id: _cameraMicrophone
         text: qsTr("Microphone")
         icon.name: "audio-input-microphone"
@@ -273,4 +281,8 @@ Item {
         id:_smallDanmu
         text:"小"
     }
+    Action {
+         id: _timedPause
+         text: "Timed Pause"
+     }
 }

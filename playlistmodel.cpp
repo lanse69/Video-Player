@@ -4,7 +4,7 @@
 #include <QFile>
 #include <QRandomGenerator>
 
-PlaylistModel::PlaylistModel(QObject *parent) : QAbstractListModel(parent)
+PlaylistModel::PlaylistModel(QObject *parent) : QAbstractListModel(parent), m_currentIndex{-1}
 {
     avformat_network_init();
 }

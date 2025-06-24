@@ -10,5 +10,5 @@ public:
 
 private:
     int m_y;
-    qint64 m_lastTime = 0;
+    qint64 m_lastTime;
 };

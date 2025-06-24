@@ -18,7 +18,7 @@
 CaptureManager::CaptureManager(QObject *parent)
     : QObject{parent}
     , m_recordState{Stopped}
-    , m_recordTimer{new QTimer(this)}
+    , m_recordTimer{nullptr}
     , m_recordingSeconds{0}
     , m_screenCapture{nullptr}
     , m_audioInput{nullptr}
@@ -27,16 +27,14 @@ CaptureManager::CaptureManager(QObject *parent)
     , m_camera{nullptr}
     , m_imageCapture{nullptr}
     , m_cameraRecorder{nullptr}
-    , m_cameraTimer{new QTimer(this)}
+    , m_cameraTimer{nullptr}
     , m_cameraRecordingSeconds{0}
     , m_cameraState{CameraStopped}
     , m_cameraSession{nullptr}
     , m_cameraAudio{true}
     , m_cameraAudioInput{nullptr}
+    , m_playerLayout{LayoutNull}
 {
-    connect(m_recordTimer, &QTimer::timeout, this, &CaptureManager::updateRecordingTime);
-    connect(m_cameraTimer, &QTimer::timeout, this, &CaptureManager::updateCameraTime);
-
     if (QMediaDevices::defaultAudioInput().isNull()) {
         qWarning() << "No audio input device available";
         m_recordAudio = false; // 无设备时禁用录音
@@ -208,6 +206,10 @@ void CaptureManager::startRecording()
     // 开始计时
     m_recordingSeconds = 0;
     emit recordingTimeChanged();
+    if (!m_recordTimer) {
+        m_recordTimer = new QTimer(this);
+        connect(m_recordTimer, &QTimer::timeout, this, &CaptureManager::updateRecordingTime);
+    }
     m_recordTimer->start(1000);
 }
 
@@ -293,6 +295,11 @@ void CaptureManager::cleanupRecorder()
         m_captureSession.setAudioInput(nullptr);
         delete m_audioInput;
         m_audioInput = nullptr;
+    }
+
+    if (m_recordTimer) {
+        delete m_recordTimer;
+        m_recordTimer = nullptr;
     }
 }
 
@@ -383,6 +390,7 @@ void CaptureManager::selectCamera(const QString &deviceId)
 
     if (it != m_availableCameras.end()) {
         m_camera = new QCamera(*it, this);
+        m_camera->start();
         setupCameraRecorder();
         emit cameraChanged();
     }
@@ -454,15 +462,12 @@ void CaptureManager::startCameraRecording()
         m_cameraSession->setAudioInput(m_cameraAudioInput);
     }
 
-    m_camera->start();
-    m_cameraState = CameraRecording;
+    m_cameraState = CameraPaused;
     emit cameraStateChanged();
 
-    m_cameraRecorder->record();
-    // 开始计时
+    // 刷新时间
     m_cameraRecordingSeconds = 0;
     emit cameraRecordingTimeChanged();
-    m_cameraTimer->start(1000);
 }
 
 void CaptureManager::pauseCameraRecording()
@@ -472,7 +477,7 @@ void CaptureManager::pauseCameraRecording()
     m_cameraRecorder->pause();
     m_cameraState = CameraPaused;
     emit cameraStateChanged();
-    m_cameraTimer->stop();
+    if (m_cameraTimer) m_cameraTimer->stop();
 }
 
 void CaptureManager::resumeCameraRecording()
@@ -482,7 +487,13 @@ void CaptureManager::resumeCameraRecording()
     m_cameraRecorder->record();
     m_cameraState = CameraRecording;
     emit cameraStateChanged();
-    m_cameraTimer->start();
+    if (m_cameraTimer) {
+        m_cameraTimer->start();
+    } else {
+        m_cameraTimer = new QTimer{this};
+        connect(m_cameraTimer, &QTimer::timeout, this, &CaptureManager::updateCameraTime);
+        m_cameraTimer->start(1000);
+    }
 }
 
 void CaptureManager::stopCameraRecording()
@@ -493,7 +504,7 @@ void CaptureManager::stopCameraRecording()
     m_camera->stop();
     m_cameraState = CameraStopped;
     emit cameraStateChanged();
-    m_cameraTimer->stop();
+    if (m_cameraTimer) m_cameraTimer->stop();
 
     m_cameraRecordingSeconds = 0;
     emit cameraRecordingTimeChanged();
@@ -529,8 +540,10 @@ void CaptureManager::cleanupCameraRecorder()
         m_cameraAudioInput = nullptr;
     }
 
-    m_cameraState = CameraStopped;
-    emit cameraStateChanged();
+    if (m_cameraTimer) {
+        delete m_cameraTimer;
+        m_cameraTimer = nullptr;
+    }
 }
 
 CaptureManager::CameraState CaptureManager::cameraState() const
@@ -553,5 +566,18 @@ void CaptureManager::setCameraAudio(bool enable)
     if (m_cameraAudio != enable) {
         m_cameraAudio = enable;
         emit cameraAudioChanged();
+    }
+}
+
+CaptureManager::CameraLayout CaptureManager::playerLayout() const
+{
+    return m_playerLayout;
+}
+
+void CaptureManager::setPlayerLayout(CameraLayout layout)
+{
+    if (m_playerLayout != layout) {
+        m_playerLayout = layout;
+        emit playerLayoutChanged();
     }
 }

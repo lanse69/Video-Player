@@ -24,6 +24,7 @@ qt_add_qml_module(appVideo-Player
         danmu.h danmu.cpp
         font.h font.cpp
         danmutrack.h danmutrack.cpp
+        danmumanager.h danmumanager.cpp
     QML_FILES
         Main.qml
         Actions.qml
@@ -32,13 +33,9 @@ qt_add_qml_module(appVideo-Player
         Playlist.qml
         Content.qml
         ControlBar.qml
+        Danmu.qml
+        DanmuRender.js
     RESOURCES resources.qrc
-    SOURCES danmu.h danmu.cpp
-    SOURCES font.h font.cpp
-    SOURCES danmutrack.h danmutrack.cpp
-    SOURCES danmumanager.h danmumanager.cpp
-    QML_FILES Danmu.qml
-    QML_FILES DanmuRender.js
 )
 
 target_compile_features(appVideo-Player PRIVATE cxx_std_23)

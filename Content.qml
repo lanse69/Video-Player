@@ -15,6 +15,7 @@ Item {
     property alias danmuManager: _danmuManager
     property alias danmuTimer: _danmuTimer
     property alias danmuGenerater: _danmuGenerater
+
     Dialogs {
         id: _dialogs
         captureManager: content.captureManager
@@ -34,13 +35,15 @@ Item {
             target: parent
 
             onPointChanged: {
+                if(captureManager.playerLayout !== CaptureManager.NotVideo){
                     // 当鼠标靠近右侧时显示播放列表
-                    playlist.visible = (point.position.x > parent.width *(3/4))&&!searchList.visible&&searchBox.length===0
-                    searchBox.visible=(point.position.x > parent.width *(3/4))
-                    searchList.visible=(point.position.x > parent.width *(3/4))&&!playlist.visible&&searchBox.length!==0
-                    playlistcurtain.visible=(point.position.x > parent.width *(3/4))
-                    // 当鼠标靠近底部时显示控制栏
-                    controlBar.visible = (point.position.y > parent.height - 100)
+                    playlist.visible = (point.position.x > parent.width * (3/4)) && !searchList.visible && searchBox.length === 0 && (point.position.y <= parent.height - 50)
+                    searchBox.visible = (point.position.x > parent.width * (3/4)) && (point.position.y <= parent.height - 50)
+                    searchList.visible = (point.position.x > parent.width * (3/4)) && !playlist.visible && searchBox.length !== 0 && (point.position.y <= parent.height - 50)
+                    playlistcurtain.visible = (point.position.x > parent.width * (3/4)) && (point.position.y <= parent.height - 50)
+                }
+                // 当鼠标靠近底部时显示控制栏
+                controlBar.visible = (point.position.y > parent.height - 50)
             }
         }
     }
@@ -49,17 +52,19 @@ Item {
     DanmuManager{
         id:_danmuManager
     }
+
     Timer{
         id:_danmuTimer
         running:mediaEngine.playing
         repeat: true
         interval: 1000
         onTriggered: {
-            if(DanmuRender.count>0){
-                DanmuRender.danmusRender(danmuManager.danmus(parent.width,DanmuRender.count,mediaEngine.position))
+            if(DanmuRender.count > 0){
+                DanmuRender.danmusRender(danmuManager.danmus(parent.width, DanmuRender.count, mediaEngine.position))
             }
         }
     }
+
     Repeater{
         id:_danmuGenerater
         visible: mediaEngine.playing
@@ -80,28 +85,28 @@ Item {
         placeholderTextColor: "gray"
         focus: true
 
-        Keys.onPressed: (event)=>{
-                            //确保输入合法
-                            if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
-                                event.accepted=true
-                            }
-                            //确保输入内容的大小
-                            if(length>=10&&event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
-                                event.accepted=true
-                            }
-                        }
+        Keys.onPressed: function (event){
+            //确保输入合法
+            if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                event.accepted=true
+            }
+            //确保输入内容的大小
+            if(length >= 10 && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                event.accepted = true
+            }
+        }
 
         onTextChanged: {
             //根据搜索框的状态改变列表视图
-            if(length===0&&searchlistModel.currentIndex!==-1){
-                playlist.visible=true
-                content.playlistModel.currentIndex= content.playlistModel.indexByUrl(searchlistModel.getUrl(searchlistModel.currentIndex))
-                searchList.visible=false
+            if(length === 0 && searchlistModel.currentIndex !== -1){
+                playlist.visible = true
+                content.playlistModel.currentIndex = content.playlistModel.indexByUrl(searchlistModel.getUrl(searchlistModel.currentIndex))
+                searchList.visible = false
             }else{
-                playlist.visible=false
-                searchList.visible=true
+                playlist.visible = false
+                searchList.visible = true
                 searchlistModel.clear()
-                searchlistModel.currentIndex=-1
+                searchlistModel.currentIndex = -1
                 searchlistModel.addMedias(playlistModel.search(text))
             }
         }
@@ -114,7 +119,7 @@ Item {
         anchors {
             top: searchBox.bottom
             right: parent.right
-            bottom: controlBar.top
+            bottom: _controlBar.top
         }
         playlist: content.playlistModel
     }
@@ -125,7 +130,7 @@ Item {
         anchors {
             top: searchBox.bottom
             right: parent.right
-            bottom: controlBar.top
+            bottom: _controlBar.top
         }
         visible: false
         playlist: searchlistModel
@@ -145,13 +150,13 @@ Item {
                 if (mediaUrl) {
                     mediaEngine.setMedia(mediaUrl)
                     mediaEngine.play()
-                    var title = searchlistModel.data(searchlistModel.index(searchlistModel.currentIndex,0),PlaylistModel.TitleRole)
+                    var title = searchlistModel.data(searchlistModel.index(searchlistModel.currentIndex, 0), PlaylistModel.TitleRole)
                     if (title) {
-                        window.title = "Video Player - "+title
+                        window.title = "Video Player - " + title
                     }
                     //初始化弹幕
                     danmuManager.initDanmus(title)
-                    danmuManager.initTracks(content.height*(1/4))
+                    danmuManager.initTracks(content.height * (1/4))
                 }
             }
         }
@@ -160,7 +165,7 @@ Item {
     //播放列表的底层
     Rectangle{
         id:playlistcurtain
-        width: parent.width*(1/4)
+        width: parent.width * (1/4)
         height: playlist.height
         visible: false
         anchors.top: searchBox.bottom

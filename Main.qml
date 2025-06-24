@@ -33,7 +33,7 @@ ApplicationWindow {
                     mediaEngine.play()
                     var title = playlistModel.data(playlistModel.index(playlistModel.currentIndex,0),PlaylistModel.TitleRole)
                     if (title) {
-                        window.title = "Video Player - "+title
+                        window.title = "Video Player - " + title
                     }
                     content.danmuManager.initDanmus(title)
                     content.danmuManager.initTracks(content.height*(1/4))
@@ -67,6 +67,10 @@ ApplicationWindow {
             actions.pauseCamera.enabled = (captureManager.cameraState !== CaptureManager.CameraStopped)
             actions.stopCamera.enabled = (captureManager.cameraState !== CaptureManager.CameraStopped)
             actions.pauseCamera.checked = (captureManager.cameraState === CaptureManager.CameraPaused)
+            if(captureManager.cameraState === CaptureManager.CameraStopped){
+                captureManager.playerLayout = CaptureManager.LayoutNull
+                content.player.cameraOutput.visible = false
+            }
         }
         onCameraRecordingTimeChanged: {
             var sec = captureManager.cameraRecordingTime
@@ -110,14 +114,14 @@ ApplicationWindow {
                     model:histroyListModel
                     delegate:MenuItem{
                         action:Action {
-                                id:_histroy
-                                property string url:model.url
-                                text: qsTr("")
-                                onTriggered: {
-                                    let urls=[url]
-                                    playlistModel.addMedias(urls)
-                                }
+                            id:_histroy
+                            property string url:model.url
+                            text: qsTr("")
+                            onTriggered: {
+                                let urls=[url]
+                                playlistModel.addMedias(urls)
                             }
+                        }
                         text: model.title
                     }
                 }
@@ -151,6 +155,8 @@ ApplicationWindow {
             MenuItem { action: actions.loopPlayback }
             MenuItem { action: actions.sequentialPlayback }
             MenuItem { action: actions.randomPlayback }
+            MenuSeparator {}
+            MenuItem { action: actions.timedPause }
         }
 
         Menu {
@@ -188,6 +194,7 @@ ApplicationWindow {
                 title: qsTr("Camera")
                 MenuItem { action: actions.camera }
                 MenuItem { action: actions.cameraDevice }
+                MenuItem { action: actions.recordingLayout }
                 MenuSeparator {}
                 MenuItem { action: actions.pauseCamera }
                 MenuItem { action: actions.stopCamera }
@@ -206,22 +213,22 @@ ApplicationWindow {
                     readOnly: !content.mediaEngine.playing      //当视频没有播放时不能输入弹幕
                     placeholderText: "请输入搜索内容(限100字)"
                     placeholderTextColor: "gray"
-                    Keys.onPressed: (event)=>{
-                                        //输入回车键提交弹幕
-                                        if(event.key===Qt.Key_Enter||event.key===Qt.Key_Return){
-                                            content.danmuManager.addDanmu(content.mediaEngine.position,danmuInputBox.text)
-                                            danmuInputBox.text=""
-                                        }
+                    Keys.onPressed: function(event) {
+                        //输入回车键提交弹幕
+                        if(event.key===Qt.Key_Enter||event.key===Qt.Key_Return){
+                            content.danmuManager.addDanmu(content.mediaEngine.position,danmuInputBox.text)
+                            danmuInputBox.text=""
+                        }
 
-                                        //确保输入合法
-                                        if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
-                                            event.accepted=true
-                                        }
-                                        //确保输入内容的大小
-                                        if(length>=100&&event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
-                                            event.accepted=true
-                                        }
-                                    }
+                        //确保输入合法
+                        if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                            event.accepted=true
+                        }
+                        //确保输入内容的大小
+                        if(length>=100&&event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                            event.accepted=true
+                        }
+                    }
                 }
             }
             Menu{
@@ -296,14 +303,19 @@ ApplicationWindow {
         saveLocation.onTriggered: content.dialogs.saveLocationDialog.open()
         camera.enabled: captureManager.hasCamera
         camera.onTriggered: {
-            if(captureManager.setCamera()){
+            if(captureManager.playerLayout === CaptureManager.LayoutNull){
+                content.dialogs.recordingLayoutDialog.open();
                 mediaEngine.pause()
-                captureManager.startCameraRecording()
             } else {
-                if (captureManager.availableCameras.length > 1) {
-                    content.dialogs.cameraSelectDialog.open()
-                } else if (captureManager.availableCameras.length === 1) {
-                    captureManager.selectCamera(captureManager.availableCameras[0].id)
+                if(captureManager.setCamera()){
+                    mediaEngine.pause()
+                    captureManager.startCameraRecording()
+                } else {
+                    if (captureManager.availableCameras.length > 1) {
+                        content.dialogs.cameraSelectDialog.open()
+                    } else if (captureManager.availableCameras.length === 1) {
+                        captureManager.selectCamera(captureManager.availableCameras[0].id)
+                    }
                 }
             }
         }
@@ -317,6 +329,7 @@ ApplicationWindow {
         stopCamera.onTriggered: captureManager.stopCameraRecording()
         cameraMicrophone.onTriggered: captureManager.cameraAudio = cameraMicrophone.checked
         cameraDevice.onTriggered: content.dialogs.cameraSelectDialog.open()
+        recordingLayout.onTriggered: content.dialogs.recordingLayoutDialog.open()
         fullScreen.onTriggered: { // 全屏
             if (!content.player.smallWindowMode) { // 小窗播放时不能全屏
                 window.showFullScreen()
@@ -350,6 +363,7 @@ ApplicationWindow {
             content.danmuManager.fontSize=40
             content.danmuManager.initTracks(content.height*(1/4))
         }
+        timedPause.onTriggered: content.dialogs.timedPauseDialog.open()
     }
 
     Content {

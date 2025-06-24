@@ -4,6 +4,7 @@
 #include <QList>
 #include <QUrl>
 #include <qqmlintegration.h>
+
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
@@ -60,5 +61,5 @@ private:
 
     QString getTitleByFF(QUrl url) const; //通过ffmpeg获取文件数据内的标题
     QList<MediaInfo> m_mediaList;
-    int m_currentIndex = -1;
+    int m_currentIndex;
 };

@@ -3,9 +3,7 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <algorithm>
-DanmuManager::DanmuManager(
-    QObject *parent)
-    : QObject{parent}
+DanmuManager::DanmuManager(QObject *parent) : QObject{parent}, m_speed{0.1}
 {
     _font = new Font{};
 }

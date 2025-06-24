@@ -37,7 +37,7 @@ public:
     void setFontSize(int size);
 
 private:
-    float m_speed = 0.1;
+    float m_speed;
     QString m_title;
     QList<Danmu> m_danmus;
     QList<DanmuTrack> m_danmuTracks;

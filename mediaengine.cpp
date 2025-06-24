@@ -20,6 +20,10 @@ MediaEngine::MediaEngine(QObject *parent)
     , m_hasSubtitle{false}
     , m_subtitleVisible{true}
     , m_userMutedSubtitle{false}
+    , m_playbackMode{Sequential}
+    , m_playbackFinished{false}
+    , m_thumbnailPlayer{nullptr}
+    , m_thumbnailSink{nullptr}
 {
     m_player = new QMediaPlayer(this);
     m_audioOutput = new QAudioOutput(this);
@@ -31,6 +35,10 @@ MediaEngine::MediaEngine(QObject *parent)
     m_thumbnailSink = new QVideoSink(this);
     m_thumbnailPlayer->setVideoOutput(m_thumbnailSink);
     m_thumbnailPlayer->setAudioOutput(nullptr); // 禁用音频输出
+
+    m_timedPause = new QTimer(this);
+    m_pauseCountdown = new QTimer(this);
+    m_pauseCountdown->setInterval(1000);
 
     connect(m_player, &QMediaPlayer::playbackStateChanged, this, &MediaEngine::playingChanged);
     connect(m_player, &QMediaPlayer::positionChanged, this, &MediaEngine::positionChanged);
@@ -55,6 +63,9 @@ MediaEngine::MediaEngine(QObject *parent)
     connect(m_player, &QMediaPlayer::positionChanged, this, [this](qint64 position) {
         if (position > 0 && position == m_player->duration()) { setPlaybackFinished(true); }
     });
+
+    // 到设定的时间暂停
+    connect(m_timedPause, &QTimer::timeout, this, &MediaEngine::pause);
 }
 
 QVideoSink *MediaEngine::videoSink() const
@@ -498,4 +509,20 @@ QString MediaEngine::getFrameAtPosition(qint64 position)
     }
 
     return "data:image/png;base64," + byteArray.toBase64();
+}
+
+void MediaEngine::timedPauseStart(int minutes)
+{
+    if (minutes == 0) {
+        m_pauseTime = 0;
+        m_timedPause->stop();
+    } else {
+        m_pauseTime = minutes;
+        m_timedPause->start(minutes * 60 * 1000);
+    }
+}
+
+int MediaEngine::pauseTime()
+{
+    return m_pauseTime;
 }

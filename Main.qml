@@ -340,12 +340,14 @@ ApplicationWindow {
             DanmuRender.smallDanmu()
             DanmuRender.endDanmus()
             content.danmuManager.initDanmus(window.title.replace(/^[^-]*-\x20/,""))
+            content.danmuManager.fontSize=20
             content.danmuManager.initTracks(content.height*(1/4))
         }
         bigDanmu.onTriggered:{
             DanmuRender.bigDanmu()
             DanmuRender.endDanmus()
             content.danmuManager.initDanmus(window.title.replace(/^[^-]*-\x20/,""))
+            content.danmuManager.fontSize=40
             content.danmuManager.initTracks(content.height*(1/4))
         }
     }

@@ -19,6 +19,9 @@ ApplicationWindow {
             actions.subtitle.enabled = mediaEngine.hasSubtitle
             actions.subtitle.checked = mediaEngine.subtitleVisible
         }
+        onLocalChanged: {
+            content.controlBar.downloadButton.visible = !mediaEngine.isLocal
+        }
     }
 
     // 播放列表
@@ -43,9 +46,7 @@ ApplicationWindow {
 
     CaptureManager {
         id: captureManager
-        onScreenshotCaptured: {
-            content.dialogs.previewDialog.open()
-        }
+        onScreenshotCaptured: content.dialogs.previewDialog.open()
         onErrorOccurred: function(error) {
             content.dialogs.errorDialog.text = error;
             content.dialogs.errorDialog.open();
@@ -90,6 +91,7 @@ ApplicationWindow {
             }
         }
         onCameraAudioChanged: actions.cameraMicrophone.checked = captureManager.cameraAudio
+        onCameraChanged: actions.recordingLayout.enabled = captureManager.setCamera()
     }
 
     //历史记录的数据项
@@ -105,6 +107,10 @@ ApplicationWindow {
         Menu {
             title: qsTr("File")
             MenuItem { action: actions.open }
+            MenuItem { action: actions.openUrl }
+            MenuSeparator {}
+            MenuItem { action: actions.download }
+            MenuSeparator {}
             MenuItem { action: actions.close }
             MenuSeparator {}
             Menu{
@@ -200,8 +206,6 @@ ApplicationWindow {
                 MenuSeparator {}
                 MenuItem { action: actions.cameraMicrophone }
             }
-            MenuSeparator {}
-            MenuItem { action: actions.saveLocation }
         }
         Menu{
             title:"Danmu"
@@ -210,7 +214,7 @@ ApplicationWindow {
                     id:danmuInputBox
                     anchors.fill: parent
                     readOnly: !content.mediaEngine.play
-                    placeholderText: "请输入搜索内容(限100字)"
+                    placeholderText: "请输入弹幕内容(限100字)"
                     placeholderTextColor: "gray"
                     Keys.onPressed: function(event) {
                         //输入回车键提交弹幕
@@ -235,12 +239,18 @@ ApplicationWindow {
         Menu {
             title: qsTr("Help")
             MenuItem { action: actions.aboutQt }
+            MenuSeparator {}
+            MenuItem { action: actions.saveLocation }
+            MenuItem { action: actions.attention }
         }
     }
 
     Actions {
         id: actions
         open.onTriggered: content.dialogs.fileOpen.open()
+        openUrl.onTriggered: content.dialogs.urlInputDialog.open()
+        download.enabled: mediaEngine && !mediaEngine.isLocal && mediaEngine.currentMedia.toString() !== ""
+        download.onTriggered: content.downloadManager.nowDownload();
         close.onTriggered: closeVideo()
         exit.onTriggered: Qt.quit()
         play.onTriggered: mediaEngine.play()
@@ -295,21 +305,22 @@ ApplicationWindow {
         stopRecord.onTriggered: captureManager.stopRecording()
         microphone.onTriggered: captureManager.recordAudio = microphone.checked
         saveLocation.onTriggered: content.dialogs.saveLocationDialog.open()
+        attention.onTriggered: content.dialogs.attentionDialog.open()
         camera.enabled: captureManager.hasCamera
         camera.onTriggered: {
-            if(captureManager.playerLayout === CaptureManager.LayoutNull){
-                content.dialogs.recordingLayoutDialog.open();
-                mediaEngine.pause()
-            } else {
-                if(captureManager.setCamera()){
+            if(captureManager.setCamera()){
+                if(captureManager.playerLayout === CaptureManager.LayoutNull){
+                    content.dialogs.recordingLayoutDialog.open();
+                    mediaEngine.pause()
+                }else{
                     mediaEngine.pause()
                     captureManager.startCameraRecording()
-                } else {
-                    if (captureManager.availableCameras.length > 1) {
-                        content.dialogs.cameraSelectDialog.open()
-                    } else if (captureManager.availableCameras.length === 1) {
-                        captureManager.selectCamera(captureManager.availableCameras[0].id)
-                    }
+                }
+            } else {
+                if (captureManager.availableCameras.length > 1) {
+                    content.dialogs.cameraSelectDialog.open()
+                } else if (captureManager.availableCameras.length === 1) {
+                    captureManager.selectCamera(captureManager.availableCameras[0].id)
                 }
             }
         }
@@ -323,6 +334,7 @@ ApplicationWindow {
         stopCamera.onTriggered: captureManager.stopCameraRecording()
         cameraMicrophone.onTriggered: captureManager.cameraAudio = cameraMicrophone.checked
         cameraDevice.onTriggered: content.dialogs.cameraSelectDialog.open()
+        recordingLayout.enabled: captureManager.setCamera()
         recordingLayout.onTriggered: content.dialogs.recordingLayoutDialog.open()
         fullScreen.onTriggered: { // 全屏
             if (!content.player.smallWindowMode) { // 小窗播放时不能全屏
@@ -404,6 +416,7 @@ ApplicationWindow {
         title = "Video Player"
     }
 
+    // 让菜单栏收回截图按键，保证截图时截图按键不挡住窗口画面
     function takeScreenshot(type) {
         screenshotTimer.type = type
         screenshotTimer.start()
@@ -450,7 +463,6 @@ ApplicationWindow {
         border.width: 4
         radius: 8
         visible: dragHandler.dragActive
-        // visible: dropArea.containsDrag
 
         Label {
             anchors.centerIn: parent

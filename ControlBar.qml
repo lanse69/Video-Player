@@ -286,6 +286,14 @@ Rectangle {
             }
         }
 
+        ToolButton {
+            icon.name: "folder-download"
+            visible: mediaEngine && !mediaEngine.isLocal && mediaEngine.currentMedia.toString() !== ""
+            onClicked: {
+                content.downloadManager.nowDownload();
+            }
+        }
+
         // 音量控制
         ToolButton {
             icon.name: mediaEngine && mediaEngine.muted ? "audio-volume-muted" :

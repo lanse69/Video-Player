@@ -24,6 +24,7 @@ MediaEngine::MediaEngine(QObject *parent)
     , m_playbackFinished{false}
     , m_thumbnailPlayer{nullptr}
     , m_thumbnailSink{nullptr}
+    , m_islocal(true)
 {
     m_player = new QMediaPlayer(this);
     m_audioOutput = new QAudioOutput(this);
@@ -161,16 +162,26 @@ void MediaEngine::setMedia(const QUrl &url)
 {
     if (url.isEmpty()) return;
 
+    bool wasLocal = m_islocal;
+    m_islocal = url.isLocalFile();
+
     m_subtitles.clear();
     m_hasSubtitle = false;
     m_subtitleText = "";
     emit hasSubtitleChanged();
     emit subtitleTextChanged();
 
+    // 检查URL类型
+    if (url.isLocalFile()) {
+        // 本地文件 - 加载字幕
+        loadSubtitle(url);
+    }
+
+    if (url.isLocalFile() != wasLocal) emit localChanged();
+
     m_player->setSource(url);
     emit currentMediaChanged();
 
-    loadSubtitle(url); // 加载字幕文件
     emit subtitleVisibleChanged();
 }
 
@@ -435,6 +446,12 @@ qreal MediaEngine::videoAspectRatio() const
         if (size.isValid()) return qreal(size.width() / size.height());
     }
     return 0;
+}
+
+bool MediaEngine::isLocal()
+{
+    m_islocal = currentMedia().isLocalFile();
+    return m_islocal;
 }
 
 MediaEngine::PlaybackMode MediaEngine::playbackMode() const

@@ -222,13 +222,13 @@ void CaptureManager::setupScreenRecorder()
     // 初始化媒体格式
     QMediaFormat format;
     format.setFileFormat(QMediaFormat::MPEG4);
-    format.setVideoCodec(QMediaFormat::VideoCodec::H265);
+    format.setVideoCodec(QMediaFormat::VideoCodec::H264);
     format.setAudioCodec(QMediaFormat::AudioCodec::AAC);
     m_mediaRecorder->setMediaFormat(format);
     // 设置分辨率
     m_mediaRecorder->setVideoResolution(QGuiApplication::primaryScreen()->size());
     // 设置比特率
-    m_mediaRecorder->setVideoBitRate(8000000);
+    m_mediaRecorder->setVideoBitRate(23000000);
     // 设置帧率
     m_mediaRecorder->setVideoFrameRate(60);
 
@@ -415,7 +415,7 @@ void CaptureManager::setupCameraRecorder()
     // 配置录制格式
     QMediaFormat format;
     format.setFileFormat(QMediaFormat::MPEG4);
-    format.setVideoCodec(QMediaFormat::VideoCodec::H265);
+    format.setVideoCodec(QMediaFormat::VideoCodec::H264);
     format.setAudioCodec(QMediaFormat::AudioCodec::AAC);
     m_cameraRecorder->setMediaFormat(format);
     m_cameraRecorder->setVideoResolution(QGuiApplication::primaryScreen()->size());
@@ -509,6 +509,8 @@ void CaptureManager::stopCameraRecording()
     m_cameraRecordingSeconds = 0;
     emit cameraRecordingTimeChanged();
 
+    if (m_playerLayout != LayoutNull) m_playerLayout = LayoutNull;
+
     cleanupCameraRecorder();
 }
 
@@ -532,6 +534,7 @@ void CaptureManager::cleanupCameraRecorder()
         m_cameraSession->setCamera(nullptr);
         delete m_camera;
         m_camera = nullptr;
+        emit cameraChanged();
     }
 
     if (m_cameraAudioInput) {

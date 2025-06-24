@@ -11,6 +11,6 @@ public:
     Font();
 
 private:
-    QString m_font;
-    int m_size;
+    QString m_font = "DejaVu Sans Mono";
+    int m_size = 20;
 };

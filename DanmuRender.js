@@ -13,6 +13,9 @@ function push(text)
 function popRun(text)
 {
     let i=runningList.indexOf(text)
+    if(i===-1){
+        return;
+    }
     remainList.push(text)
     runningList.splice(i,1)
     count++
@@ -40,7 +43,7 @@ function danmusRender(danmus)
 function endDanmus()
 {
     for(let i of runningList){
-        i.animation.stop()
+        i.visible=false
     }
 }
 
@@ -52,5 +55,27 @@ function destroy(text){
     }else{
         i=runningList.indexOf(text)
         runningList.splice(i,1)
+    }
+}
+
+//设置弹幕大小为大
+function bigDanmu()
+{
+    for(let i of remainList){
+        i.font.pixelSize=40
+    }
+    for(let i of runningList){
+        i.font.pixelSize=40
+    }
+}
+
+//设置弹幕大小为小
+function smallDanmu()
+{
+    for(let i of remainList){
+        i.font.pixelSize=20
+    }
+    for(let i of runningList){
+        i.font.pixelSize=20
     }
 }

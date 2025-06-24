@@ -6,7 +6,7 @@ Text {
     visible:false
     property var animation: animation
     font.family: "DejaVu Sans Mono"
-    font.pixelSize: 40
+    font.pixelSize: 20
     //交给弹幕渲染器管理
     Component.onCompleted: {
         text.x=-text.width
@@ -21,7 +21,6 @@ Text {
         id:animation
         onFinished: {
             text.visible=false
-            DanmuRender.popRun(text)
         }
     }
 
@@ -30,10 +29,15 @@ Text {
         text.visible=true
         DanmuRender.popRemain()
         text.text=content
+        text.y=y
         animation.from=x
         animation.to=endx
         animation.duration=time
         animation.start()
-        console.log(x,y,endx,content,time)
+    }
+    onVisibleChanged: {
+        if(!visible){
+            DanmuRender.popRun(text)
+        }
     }
 }

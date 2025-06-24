@@ -13,5 +13,5 @@ public:
 private:
     qint64 m_sendTime;
     QString m_content;
-    bool isAllocate;
+    bool m_isAllocate = false;
 };

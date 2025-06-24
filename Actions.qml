@@ -41,6 +41,8 @@ Item {
     property alias aspectRatio16_9: _aspectRatio16_9
     property alias aspectRatio4_3: _aspectRatio4_3
     property alias smallWindowMode: _smallWindowMode
+    property alias bigDanmu: _bigDanmu
+    property alias smallDanmu:_smallDanmu
     property alias timedPause: _timedPause
     property alias attention: _attention
 
@@ -294,8 +296,18 @@ Item {
         icon.name: "preferences-system-windows-actions"
     }
 
+    Action{
+        id:_bigDanmu
+        text: "大"
+    }
+
+    Action{
+        id:_smallDanmu
+        text:"小"
+    }
+
     Action {
-         id: _timedPause
-         text: "Timed Pause"
-     }
+        id: _timedPause
+        text: "Timed Pause"
+    }
 }

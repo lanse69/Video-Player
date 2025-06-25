@@ -37,6 +37,7 @@ ApplicationWindow {
                     }
                     content.danmuManager.initDanmus(title)
                     content.danmuManager.initTracks(content.height*(1/4))
+                    DanmuRender.endDanmus()
                 }
             }
         }

@@ -157,6 +157,7 @@ Item {
                     //初始化弹幕
                     danmuManager.initDanmus(title)
                     danmuManager.initTracks(content.height * (1/4))
+                    DanmuRender.endDanmus()
                 }
             }
         }

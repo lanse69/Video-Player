@@ -211,36 +211,12 @@ ApplicationWindow {
         }
         Menu{
             title:"Danmu"
-            MenuItem{
-                TextArea{
-                    id:danmuInputBox
-                    anchors.fill: parent
-                    readOnly: !content.mediaEngine.playing  //当视频没有播放时不能输入弹幕
-                    placeholderText: "请输入弹幕内容(限100字)"
-                    placeholderTextColor: "gray"
-                    Keys.onPressed: function(event) {
-                        //输入回车键提交弹幕
-                        if(event.key===Qt.Key_Enter||event.key===Qt.Key_Return){
-                            content.danmuManager.addDanmu(content.mediaEngine.position,danmuInputBox.text)
-                            danmuInputBox.text=""
-                        }
-
-                        //确保输入合法
-                        if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
-                            event.accepted=true
-                        }
-                        //确保输入内容的大小
-                        if(length>=100&&event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
-                            event.accepted=true
-                        }
-                    }
-                }
-            }
             Menu{
                 title:"字体大小"
                 MenuItem{action: actions.bigDanmu}
                 MenuItem{action: actions.smallDanmu}
             }
+            MenuItem{action: actions.danmuSwitch}
         }
 
         Menu {
@@ -377,6 +353,11 @@ ApplicationWindow {
             content.danmuManager.initTracks(content.height*(1/4))
         }
         timedPause.onTriggered: content.dialogs.timedPauseDialog.open()
+        danmuSwitch.onCheckedChanged:{
+            if(actions.danmuSwitch.checked===true){
+                DanmuRender.endDanmus()
+            }
+        }
     }
 
     Content {

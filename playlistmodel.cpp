@@ -52,23 +52,26 @@ void PlaylistModel::addMedia(const QUrl &url)
 
     QString title = getTitleByFF(url); //设置title
     cur.title = title == "" ? url.path().section('/', -1) : title;
+    beginInsertRows(QModelIndex(), m_mediaList.size(),
+                    m_mediaList.size()); //通知视图数据插入开始了
     m_mediaList.append(cur);
+    endInsertRows(); //通知视图数据插入结束了
 }
 
-void PlaylistModel::addMedias(const QList<QUrl> &urls)
+void PlaylistModel::addMedias(
+    const QList<QUrl> &urls)
 {
     if (urls.isEmpty()) return;
 
-    beginInsertRows(QModelIndex(),
-                    m_mediaList.size(),
-                    m_mediaList.size() + urls.size() - 1); //通知视图数据插入开始了
     for (auto &url : urls) {
-        addMedia(url);
+        if (indexByUrl(url) == -1) { //如果url在列表里不存在
+            addMedia(url);
+            setCurrentIndex(m_mediaList.size() - 1);
+        } else {
+            setCurrentIndex(indexByUrl(url));
+        }
     }
-    endInsertRows(); //通知视图数据插入结束了
     emit rowCountChanged();
-
-    if (m_currentIndex == -1) { setCurrentIndex(0); }
 }
 
 void PlaylistModel::removeMedia(int index)
@@ -77,13 +80,12 @@ void PlaylistModel::removeMedia(int index)
 
     beginRemoveRows(QModelIndex(), index, index); //通知视图数据删除开始了
     m_mediaList.removeAt(index);
-    endRemoveRows(); //通知视图数据删除结束了
     emit rowCountChanged();
 
     if (m_mediaList.isEmpty()) {
         setCurrentIndex(-1);
     } else if (index <= m_currentIndex) {
-        setCurrentIndex(qMax(0, m_currentIndex - 1)); //如果设置
+        setCurrentIndex(qMax(0, m_currentIndex - 1));
     }
 }
 
@@ -218,8 +220,9 @@ int PlaylistModel::indexByUrl(
     QUrl url)
 {
     for (int i = 0; i < m_mediaList.size(); i++) {
-        if (m_mediaList[i].url == url)
+        if (m_mediaList[i].url == url) {
             return i;
+        }
     }
     qDebug() << "indexByUrl failed";
     return -1;

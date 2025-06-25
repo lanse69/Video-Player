@@ -29,7 +29,6 @@ void DanmuManager::initDanmus(
         QString content;
         QString line = in.readLine();
 
-        qDebug() << line;
         //读入每行的开始时间和内容
         bool ok;
         startTime = line.section(" ", 0, 0).toLongLong(&ok);

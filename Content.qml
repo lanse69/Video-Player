@@ -212,10 +212,13 @@ Item {
 
     //读入文件
     Connections {
+        id:readFiles
+        property var openUrl
         target: dialogs.fileOpen
 
         function onAccepted() {
             let folderUrl=(dialogs.fileOpen.selectedFiles)[0]   //获取选择的路径的文件夹的路径
+            openUrl=folderUrl
             folderListModel.folder=folderUrl.toString().replace(/\/[^\/]*$/,"/")
         }
     }
@@ -237,6 +240,7 @@ Item {
                 for(let i of files){
                     histroyListModel.setHistroy(i)
                 }
+                playlistModel.currentIndex=playlistModel.indexByUrl(readFiles.openUrl)
         }
     }
 

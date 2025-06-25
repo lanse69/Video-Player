@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import VideoPlayer
+import Qt.labs.folderlistmodel
 import "DanmuRender.js" as DanmuRender
 
 Item {
@@ -76,7 +77,7 @@ Item {
 
     Timer{
         id:_danmuTimer
-        running:mediaEngine.playing
+        running:mediaEngine.playing&&!actions.danmuSwitch.checked
         repeat: true
         interval: 1000
         onTriggered: {
@@ -209,14 +210,37 @@ Item {
         captureManager: content.captureManager
     }
 
+    //读入文件
     Connections {
+        id:readFiles
+        property var openUrl
         target: dialogs.fileOpen
 
         function onAccepted() {
-            playlistModel.addMedias(dialogs.fileOpen.selectedFiles)
-            for(let i of dialogs.fileOpen.selectedFiles){
-                histroyListModel.setHistroy(i)
-            }
+            let folderUrl=(dialogs.fileOpen.selectedFiles)[0]   //获取选择的路径的文件夹的路径
+            openUrl=folderUrl
+            folderListModel.folder=folderUrl.toString().replace(/\/[^\/]*$/,"/")
+        }
+    }
+    FolderListModel{
+        id:folderListModel
+        showFiles: true
+        showDirs: false
+        nameFilters: ["*.mp4","*.avi","*.mkv","*.mov","*.wmv","*.ogg","*.mp3","*.wav","*.flac","*.ogg","*.wav"]
+        onFolderChanged: {
+                //初始化当前文件夹的所有文件的url
+                let files=[]
+                for(let i=0;i<folderListModel.count;i++){
+                    console.log(i)
+                    files.push(folderListModel.get(i,"fileUrl"))
+                }
+
+                //添加文件和设置历史记录
+                playlistModel.addMedias(files)
+                for(let i of files){
+                    histroyListModel.setHistroy(i)
+                }
+                playlistModel.currentIndex=playlistModel.indexByUrl(readFiles.openUrl)
         }
     }
 

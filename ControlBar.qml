@@ -294,6 +294,16 @@ Rectangle {
                 }
             }
 
+            //弹幕开关
+            Button{
+                id:danmuSwitch
+                implicitWidth: 20
+                icon.name:"view-time-schedule-baselined"
+                onClicked: {
+                    danmInpustFrame.visible=true
+                }
+            }
+
             ToolButton {
                 icon.name: "folder-download"
                 visible: mediaEngine && !mediaEngine.isLocal && mediaEngine.currentMedia.toString() !== ""
@@ -433,6 +443,37 @@ Rectangle {
                 ToolButton {
                     icon.name: "media-playback-stop"
                     onClicked: captureManager.stopCameraRecording()
+                }
+            }
+        }
+    }
+
+    //弹幕输入框
+    Frame{
+        id:danmInpustFrame
+        x:danmuSwitch.x
+        y:danmuSwitch.y-height
+        visible: false
+        TextArea{
+            id:danmuInputBox
+            readOnly: content.mediaEngine.hasVideo  //当视频没有播放时不能输入弹幕
+            placeholderText: "请输入弹幕内容(限100字)"
+            placeholderTextColor: "gray"
+            Keys.onPressed: function(event) {
+                //输入回车键提交弹幕
+                if(event.key===Qt.Key_Enter||event.key===Qt.Key_Return){
+                    content.danmuManager.addDanmu(content.mediaEngine.position,danmuInputBox.text)
+                    danmuInputBox.text=""
+                    danmInpustFrame.visible=false
+                }
+
+                //确保输入合法
+                if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                    event.accepted=true
+                }
+                //确保输入内容的大小
+                if(length>=100&&event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                    event.accepted=true
                 }
             }
         }

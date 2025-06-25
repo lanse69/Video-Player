@@ -45,6 +45,15 @@ Item {
     property alias smallDanmu:_smallDanmu
     property alias timedPause: _timedPause
     property alias attention: _attention
+    property alias danmuSwitch:_danmuSwitch
+
+    Action{
+        id:_danmuSwitch
+        text:qsTr("关闭弹幕")
+        icon.name: "view-time-schedule-baselined-remove"
+        checkable: true
+        checked: false
+    }
 
     Action {
         id: _open

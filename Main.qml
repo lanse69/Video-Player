@@ -374,54 +374,6 @@ ApplicationWindow {
         histroyListModel: histroyListModel
         captureManager: captureManager
         actions: actions
-
-        // 双击全屏
-        TapHandler {
-            onDoubleTapped: {
-                if (window.visibility === ApplicationWindow.FullScreen) {
-                    window.showNormal()
-                    menuBar.visible = true  // 退出全屏时显示菜单栏
-                } else {
-                    window.showFullScreen()
-                    menuBar.visible = false // 进入全屏时隐藏菜单栏
-                }
-            }
-
-            onTapped: { // 单击暂停播放或开始播放
-                mediaEngine.playing ? mediaEngine.pause() : mediaEngine.play()
-            }
-        }
-
-        // 滑动切换视频
-        DragHandler {
-            id: slideHandler
-            target: null
-            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen
-
-            onActiveChanged: {
-                var startY = 0
-                var endY = 0
-                var isSlide = false
-                if (!active) {
-                    var distance = centroid.position.y - centroid.pressPosition.y
-                    if (Math.abs(distance) > 20) { // 滑动距离大于20像素才算滑动
-                        if (distance < 0) { // 向上滑动，下一个视频
-                            if (playlistModel.rowCount > 0) {
-                                var nextIndex = playlistModel.currentIndex + 1
-                                if (nextIndex >= playlistModel.rowCount) nextIndex = 0
-                                playlistModel.currentIndex = nextIndex
-                            }
-                        } else { // 向下滑动，上一个视频
-                            if (playlistModel.rowCount > 0) {
-                                var preIndex = playlistModel.currentIndex - 1
-                                if (preIndex < 0) preIndex = playlistModel.rowCount - 1
-                                playlistModel.currentIndex = preIndex
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     Connections {

@@ -22,6 +22,7 @@ Item {
     property alias attentionDialog: _attentionDialog
     property alias downloadDialog: _downloadDialog
     property alias timedPauseFinishedDialog: _timedPauseFinishedDialog
+    property alias videoPauseDialog: _videoPauseDialog
 
     FileDialog {
         id: _fileOpen
@@ -611,5 +612,21 @@ Item {
         Label {
             text: "The timed pause period has ended."
         }
+    }
+
+    // 暂停
+    Dialog {
+        id: _videoPauseDialog
+        Image {
+            width: 20
+            height: 20
+            source: "qrc:/icons/media-playback-start.svg"
+        }
+    }
+
+    Timer {
+        interval: 1000
+        running: _videoPauseDialog.opened
+        onTriggered: _videoPauseDialog.close()
     }
 }

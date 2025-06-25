@@ -203,7 +203,7 @@ Item {
                 }
             }
 
-            HoverHandler { // 鼠标悬停显示控制条
+            HoverHandler { // 鼠标悬停显示控制栏
                 acceptedDevices: PointerDevice.Mouse
                 onHoveredChanged: {
                     smallControlBar.visible = hovered ? true : false

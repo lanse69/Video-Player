@@ -46,13 +46,15 @@ Rectangle {
                     if (pressed) { // 开始拖拽
                         isDragging = true
                         dragValue = value
-                        thumbnailPopup.open()
+                        thumbnailImage.source = mediaEngine.getFrameAtPosition(positionSlider.dragValue); // 生成缩略图
+                        thumbnailPopup.open() // 打开缩略图
                     } else { // 结束拖拽
                         isDragging = false
                         if (mediaEngine) {
                             mediaEngine.setPosition(dragValue)
                         }
-                        thumbnailPopup.close()
+                        thumbnailPopup.close() // 关闭缩略图
+                        thumbnailImage.source = "" // 丢弃之前的缩略图
 
                         DanmuRender.endDanmus()//松开刷新弹幕
                         content.danmuManager.initDanmus(window.title.replace(/^[^-]*-\x20/,""))//通过正则表达式处理窗口标题得到正在播放的视频的标题
@@ -63,15 +65,7 @@ Rectangle {
                 onMoved: {
                     if (isDragging) {
                         dragValue = positionSlider.value
-                    }
-                }
-
-                Connections {
-                    target: positionSlider
-                    function onMoved() { // 移动时生成缩略图
-                        if (mediaEngine) {
-                            thumbnailImage.source = mediaEngine.getFrameAtPosition(positionSlider.dragValue);
-                        }
+                        thumbnailImage.source = mediaEngine.getFrameAtPosition(positionSlider.dragValue); // 生成缩略图
                     }
                 }
 
@@ -185,58 +179,22 @@ Rectangle {
             // 播放模式
             ToolButton {
                 id: playbackModeButton
-                text: {
+                icon.name: {
                     switch (mediaEngine.playbackMode) {
                     case MediaEngine.Sequential: // 顺序播放
-                        return "Seqential"
+                        return "media-playlist-normal"
                     case MediaEngine.Random: // 随机播放
-                        return "Random"
+                        return "media-playlist-shuffle"
                     case MediaEngine.Loop: // 循环播放
-                        return "Loop"
+                        return "media-playlist-repeat-symbolic"
                     default:
-                        break;
+                        return ""
                     }
                 }
 
-                onClicked: {
-                    playbackModeSelectionPopup.open()
-                }
-
-                // 播放模式选择窗口
-                Popup {
-                    id: playbackModeSelectionPopup
-                    y: -height - 10
-                    x: (playbackModeButton.width - width) / 2
-                    background: Rectangle {
-                        color: "#66000000"
-                    }
-
-                    ColumnLayout {
-                        id: playbackModeSelectionColumn
-                        Button {
-                            text: qsTr("Seqential")
-                            onClicked: {
-                                mediaEngine.setPlaybackMode(MediaEngine.Sequential)
-                                playbackModeSelectionPopup.close()
-                            }
-                        }
-
-                        Button {
-                            text: qsTr("Loop")
-                            onClicked: {
-                                mediaEngine.setPlaybackMode(MediaEngine.Loop)
-                                playbackModeSelectionPopup.close()
-                            }
-                        }
-
-                        Button {
-                            text: qsTr("Random")
-                            onClicked: {
-                                mediaEngine.setPlaybackMode(MediaEngine.Random)
-                                playbackModeSelectionPopup.close()
-                            }
-                        }
-                    }
+                onClicked: { // 循环切换播放模式
+                    var mode = (mediaEngine.playbackMode + 1) % 3
+                    mediaEngine.setPlaybackMode(mode)
                 }
             }
 

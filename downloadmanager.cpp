@@ -13,7 +13,7 @@ DownloadManager::DownloadManager(QObject *parent)
     , m_speedTimer(this)
 {
     connect(&m_speedTimer, &QTimer::timeout, this, &DownloadManager::updateSpeed);
-    m_speedTimer.setInterval(1000);
+    m_speedTimer.setInterval(1000); // 计时器初始化计时1秒
 }
 
 bool DownloadManager::downloading() const
@@ -145,7 +145,6 @@ void DownloadManager::onFinished()
         emit downloadFinished(m_file.fileName());
     }
 
-    // 安全删除reply对象
     QNetworkReply *reply = m_reply;
     m_reply = nullptr;
     reply->deleteLater();

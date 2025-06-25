@@ -5,7 +5,7 @@ import QtQuick.Controls
 ScrollView {
     id:scoll
     property PlaylistModel playlist
-    width: parent.width * (1/4)      //位于播放器右侧
+    width: parent.width * (1/3)      //位于播放器右侧
     height: parent.height
     visible: false
     anchors.right: parent.right

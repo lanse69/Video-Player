@@ -4,6 +4,7 @@ import "DanmuRender.js" as DanmuRender
 Text {
     id:text
     visible:false
+    color: "white"
     property var animation: animation
     font.family: "DejaVu Sans Mono"
     font.pixelSize: 20

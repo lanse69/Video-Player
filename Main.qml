@@ -12,6 +12,7 @@ ApplicationWindow {
     height: 600
     visible: !content.player.smallWindowMode // 当小窗口显示时，大窗口不显示
     title: "Video Player"
+    color: "black"
 
     // 媒体引擎
     MediaEngine {
@@ -19,9 +20,6 @@ ApplicationWindow {
         onHasSubtitleChanged: {
             actions.subtitle.enabled = mediaEngine.hasSubtitle
             actions.subtitle.checked = mediaEngine.subtitleVisible
-        }
-        onLocalChanged: {
-            content.controlBar.downloadButton.visible = !mediaEngine.isLocal
         }
     }
 
@@ -317,8 +315,8 @@ ApplicationWindow {
         camera.onTriggered: {
             if(captureManager.setCamera()){
                 if(captureManager.playerLayout === CaptureManager.LayoutNull){
-                    content.dialogs.recordingLayoutDialog.open();
                     mediaEngine.pause()
+                    content.dialogs.recordingLayoutDialog.open();
                 }else{
                     mediaEngine.pause()
                     captureManager.startCameraRecording()

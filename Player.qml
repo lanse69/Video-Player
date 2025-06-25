@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
 import VideoPlayer
+import "DanmuRender.js" as DanmuRender
 
 Item {
     property MediaEngine mediaEngine
@@ -57,6 +58,16 @@ Item {
         }
     }
 
+    Image {
+        id: coverArtImage
+        anchors.fill: parent
+        visible: mediaEngine.coverArtBase64 !== "" && captureManager.playerLayout === CaptureManager.LayoutNull
+        source: mediaEngine.coverArtBase64 ? "data:image/png;base64," + mediaEngine.coverArtBase64 : ""
+        fillMode: Image.PreserveAspectFit
+        cache: false
+        asynchronous: true // 异步加载
+    }
+
     // 字幕显示区域
     Rectangle {
         id: subtitleContainer
@@ -68,7 +79,8 @@ Item {
         }
         height: subtitleText.height + 20
         color: "transparent"
-        visible: subtitleVisible && currentSubtitle !== ""
+        z: 5
+        visible: subtitleVisible && currentSubtitle !== "" && captureManager.playerLayout !== CaptureManager.NotVideo && captureManager.playerLayout !== CaptureManager.Pip
 
         Text {
             id: subtitleText
@@ -109,6 +121,12 @@ Item {
                 currentSubtitle = ""
             }
         }
+
+        function onCoverImageChanged() {
+            if (mediaEngine.coverArtBase64) {
+                coverArtImage.source = "data:image/png;base64," + mediaEngine.coverArtBase64
+            }
+        }
     }
 
     Component.onCompleted: {
@@ -146,6 +164,16 @@ Item {
                 id: smallVideoOutput
                 anchors.fill: parent
                 fillMode: VideoOutput.PreserveAspectFit
+            }
+
+            Image {
+                id: smallArtImage
+                anchors.fill: parent
+                visible: mediaEngine.coverArtBase64 !== ""
+                source: mediaEngine.coverArtBase64 ? "data:image/png;base64," + mediaEngine.coverArtBase64 : ""
+                fillMode: Image.PreserveAspectFit
+                cache: false
+                asynchronous: true // 异步加载
             }
 
             // 字幕显示区域
@@ -331,6 +359,8 @@ Item {
 
         function onCameraChanged() {
             if(captureManager.playerLayout === CaptureManager.NotVideo){
+                content.damuTimer.stop()
+                DanmuRender.endDanmus()
                 captureManager.setVideoSink(_cameraOutput.videoSink)
                 _cameraOutput.visible = true
             } else if(captureManager.playerLayout === CaptureManager.LayoutNull){
@@ -359,5 +389,6 @@ Item {
         smallWindow.hide()
         leftRight.visible = false
         topBottom.visible = false
+        content.damuTimer.start()
     }
 }

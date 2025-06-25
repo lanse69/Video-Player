@@ -18,7 +18,7 @@ Item {
     property alias downloadManager: _downloadManager
 
     focus: true
-    Keys.onPressed: (event) => {
+    Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Left) {  // 左方向键，快退5秒
             mediaEngine.setPosition(mediaEngine.position - 5000);
             event.accepted = true;
@@ -58,13 +58,13 @@ Item {
             onPointChanged: {
                 if(captureManager.playerLayout !== CaptureManager.NotVideo){
                     // 当鼠标靠近右侧时显示播放列表
-                    playlist.visible = (point.position.x > parent.width * (3/4)) && !searchList.visible && searchBox.length === 0 && (point.position.y <= parent.height - 50)
-                    searchBox.visible = (point.position.x > parent.width * (3/4)) && (point.position.y <= parent.height - 50)
-                    searchList.visible = (point.position.x > parent.width * (3/4)) && !playlist.visible && searchBox.length !== 0 && (point.position.y <= parent.height - 50)
-                    playlistcurtain.visible = (point.position.x > parent.width * (3/4)) && (point.position.y <= parent.height - 50)
+                    playlist.visible = (point.position.x > parent.width * (2/3)) && !searchList.visible && searchBox.length === 0 && (point.position.y <= parent.height - 70)
+                    searchBox.visible = (point.position.x > parent.width * (2/3)) && (point.position.y <= parent.height - 70)
+                    searchList.visible = (point.position.x > parent.width * (2/3)) && !playlist.visible && searchBox.length !== 0 && (point.position.y <= parent.height - 70)
+                    playlistcurtain.visible = (point.position.x > parent.width * (2/3)) && (point.position.y <= parent.height - 70)
                 }
                 // 当鼠标靠近底部时显示控制栏
-                controlBar.visible = (point.position.y > parent.height - 50)
+                controlBar.visible = (point.position.y > parent.height - 70)
             }
         }
     }
@@ -187,7 +187,7 @@ Item {
     //播放列表的底层
     Rectangle{
         id:playlistcurtain
-        width: parent.width * (1/4)
+        width: parent.width * (1/3)
         height: playlist.height
         visible: false
         anchors.top: searchBox.bottom
@@ -222,9 +222,11 @@ Item {
 
     DownloadManager {
         id: _downloadManager
+
         onProgressChanged: {
             dialogs.downloadDialog.progress = progress * 100;
         }
+
         onSpeedChanged: {
             var speedKB = speed / 1024;
             var speedText;
@@ -235,6 +237,7 @@ Item {
             }
             dialogs.downloadDialog.speed = "Speed: " + speedText;
         }
+
         onDownloadingChanged: {
             if (downloading) {
                 dialogs.downloadDialog.progress = 0;
@@ -244,11 +247,13 @@ Item {
                 dialogs.downloadDialog.close();
             }
         }
+
         onDownloadFinished: function (filePath) {
             // 显示下载完成消息
             content.dialogs.errorDialog.text = "Download finished: " + filePath;
             content.dialogs.errorDialog.open();
         }
+
         onErrorOccurred: function (error) {
             content.dialogs.errorDialog.text = "Download error: " + error;
             content.dialogs.errorDialog.open();

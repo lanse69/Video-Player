@@ -25,6 +25,8 @@ MediaEngine::MediaEngine(QObject *parent)
     , m_thumbnailPlayer{nullptr}
     , m_thumbnailSink{nullptr}
     , m_islocal(true)
+    , m_coverArtBase64{""}
+    , m_hasVideo(false)
 {
     m_player = new QMediaPlayer(this);
     m_audioOutput = new QAudioOutput(this);
@@ -47,6 +49,12 @@ MediaEngine::MediaEngine(QObject *parent)
     connect(m_player, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
         emit mediaStatusChanged(static_cast<int>(status));
     });
+    connect(m_player, &QMediaPlayer::hasVideoChanged, this, [this]() {
+        if (m_hasVideo != m_player->hasVideo()) {
+            m_hasVideo = m_player->hasVideo();
+            emit hasVideoChanged();
+        }
+    });
     connect(m_player, &QMediaPlayer::errorOccurred, this, [this](QMediaPlayer::Error error, const QString &errorString) {
         emit errorOccurred(static_cast<int>(error), errorString);
     });
@@ -68,6 +76,8 @@ MediaEngine::MediaEngine(QObject *parent)
     // 到设定的时间暂停
     connect(m_timedPause, &QTimer::timeout, this, [this]() {
         pause();
+        m_pauseTimeRemaining = 0;
+        m_pauseTime = 0;
         emit timedPauseFinished(); // 结束信号
     });
 
@@ -112,6 +122,11 @@ qreal MediaEngine::volume() const
 bool MediaEngine::isMuted() const
 {
     return m_muted;
+}
+
+bool MediaEngine::hasVideo() const
+{
+    return m_hasVideo;
 }
 
 void MediaEngine::setVolume(qreal volume)
@@ -174,6 +189,8 @@ void MediaEngine::setMedia(const QUrl &url)
     m_subtitles.clear();
     m_hasSubtitle = false;
     m_subtitleText = "";
+    m_coverArtBase64 = "";
+    emit coverImageChanged();
     emit hasSubtitleChanged();
     emit subtitleTextChanged();
 
@@ -181,6 +198,9 @@ void MediaEngine::setMedia(const QUrl &url)
     if (url.isLocalFile()) {
         // 本地文件 - 加载字幕
         loadSubtitle(url);
+
+        // 如果是音频文件，尝试提取封面
+        if (isAudioFile(url)) { extractCoverArt(url); }
     }
 
     if (url.isLocalFile() != wasLocal) emit localChanged();
@@ -526,12 +546,12 @@ QString MediaEngine::getFrameAtPosition(qint64 position)
     QByteArray byteArray;
     QBuffer buffer(&byteArray);
     buffer.open(QIODevice::WriteOnly);
-    if (!image.save(&buffer, "PNG")) {
+    if (!image.save(&buffer, "JPEG")) {
         m_thumbnailPlayer->pause();
         return "";
     }
 
-    return "data:image/png;base64," + byteArray.toBase64();
+    return "data:image/jpeg;base64," + byteArray.toBase64();
 }
 
 void MediaEngine::timedPauseStart(int minutes)
@@ -558,6 +578,68 @@ int MediaEngine::pauseTime()
 int MediaEngine::pauseTimeRemaining() const
 {
     return m_pauseTimeRemaining;
+}
+
+QString MediaEngine::coverArtBase64() const
+{
+    return m_coverArtBase64;
+}
+
+bool MediaEngine::isAudioFile(const QUrl &url)
+{
+    QStringList audioExts = {".mp3", ".wav", ".ogg", ".flac", ".m4a", ".aac"};
+    QString path = url.toLocalFile();
+    for (const QString &ext : audioExts) {
+        if (path.endsWith(ext, Qt::CaseInsensitive)) return true;
+    }
+    return false;
+}
+
+void MediaEngine::extractCoverArt(const QUrl &mediaUrl)
+{
+    QString mediaPath = mediaUrl.toLocalFile();
+    if (mediaPath.isEmpty()) return;
+
+    // 使用FFmpeg提取封面
+    AVFormatContext *fmt_ctx = NULL;
+    if (avformat_open_input(&fmt_ctx, mediaPath.toUtf8().constData(), NULL, NULL) < 0) {
+        qWarning() << "Failed to open file for cover art extraction";
+        return;
+    }
+
+    if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
+        qWarning() << "Failed to find stream information";
+        avformat_close_input(&fmt_ctx);
+        return;
+    }
+
+    // 查找封面数据
+    bool coverFound = false;
+    for (unsigned int i = 0; i < fmt_ctx->nb_streams; i++) {
+        AVStream *stream = fmt_ctx->streams[i];
+        if (stream->disposition & AV_DISPOSITION_ATTACHED_PIC) {
+            // 找到封面数据
+            AVPacket cover = stream->attached_pic;
+            QImage image;
+            if (image.loadFromData(cover.data, cover.size)) {
+                // 转换为base64
+                QByteArray byteArray;
+                QBuffer buffer(&byteArray);
+                buffer.open(QIODevice::WriteOnly);
+                if (image.save(&buffer, "PNG")) {
+                    m_coverArtBase64 = QString::fromLatin1(byteArray.toBase64().data());
+                    coverFound = true;
+                }
+            }
+            break;
+        }
+    }
+
+    // 如果没有找到封面，确保设置为空字符串
+    if (!coverFound) { m_coverArtBase64 = ""; }
+
+    avformat_close_input(&fmt_ctx);
+    emit coverImageChanged();
 }
 
 QString MediaEngine::pauseCountdown()

@@ -4,8 +4,6 @@ project(Video-Player VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_AUTORCC ON)
-
 find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia MultimediaWidgets QuickDialogs2 QuickDialogs2QuickImpl)
 
 qt_standard_project_setup(REQUIRES 6.9)
@@ -39,6 +37,18 @@ qt_add_qml_module(appVideo-Player
     RESOURCES resources.qrc
 )
 
+source_group("QML_Files" FILES
+    Main.qml
+    Actions.qml
+    Dialogs.qml
+    Player.qml
+    Playlist.qml
+    Content.qml
+    ControlBar.qml
+    Danmu.qml
+    DanmuRender.js
+)
+
 target_compile_features(appVideo-Player PRIVATE cxx_std_23)
 
 target_link_libraries(appVideo-Player
@@ -52,6 +62,7 @@ target_link_libraries(appVideo-Player
 )
 
 set_target_properties(appVideo-Player PROPERTIES
+    AUTORCC TRUE
 #    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appVideo-Player
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}

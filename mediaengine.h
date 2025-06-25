@@ -1,10 +1,10 @@
 #pragma once
 
 #include <QObject>
+#include <QQmlEngine>
 #include <QMediaPlayer>
 #include <QAudioOutput>
 #include <QUrl>
-#include <qqmlintegration.h>
 #include <QVideoSink>
 #include <QMap>
 #include <QPair>
@@ -38,6 +38,8 @@ class MediaEngine : public QObject
 
     Q_PROPERTY(bool isLocal READ isLocal NOTIFY localChanged)
     Q_PROPERTY(int pauseTimeRemaining READ pauseTimeRemaining NOTIFY pauseTimeRemainingChanged) // 定时暂停倒计时
+    Q_PROPERTY(QString coverArtBase64 READ coverArtBase64 NOTIFY coverImageChanged)             // 封面图片的base64数据
+    Q_PROPERTY(bool hasVideo READ hasVideo NOTIFY hasVideoChanged)                              // 是否有视频流
 
 public:
     explicit MediaEngine(QObject *parent = nullptr);
@@ -49,6 +51,7 @@ public:
     };
     Q_ENUM(PlaybackMode)
 
+    bool hasVideo() const; // 获取是否有视频流
     QVideoSink *videoSink() const;
     bool isPlaying() const;
     qint64 position() const;
@@ -67,6 +70,9 @@ public:
     PlaybackMode playbackMode() const;         // 返回视频播放模式
     bool isLocal();
     int pauseTimeRemaining() const; // 返回暂停倒计时
+    QString coverArtBase64() const; // 获取封面图片的base64数据
+    bool isAudioFile(const QUrl &url);
+    void extractCoverArt(const QUrl &mediaUrl);
 
     Q_INVOKABLE bool playbackFinished() const; // 返回视频是否结束
     Q_INVOKABLE void play();
@@ -109,6 +115,8 @@ signals:
     void localChanged();
     void pauseTimeRemainingChanged(); // 暂停倒计时改变
     void timedPauseFinished();        // 定时暂停结束信号
+    void coverImageChanged();         // 封面图片变化信号
+    void hasVideoChanged();           // 视频流状态变化信号
 
 private slots:
     void updatePauseTimeRemaining(); // 暂停倒计时减小
@@ -117,6 +125,7 @@ private:
     void parseLrcFile(const QString &filePath);
     void parseSrtFile(const QString &filePath);
 
+    bool m_hasVideo; // 是否有视频流
     QMediaPlayer *m_player;
     QAudioOutput *m_audioOutput;
     QVideoSink *m_videoSink;
@@ -130,6 +139,7 @@ private:
     PlaybackMode m_playbackMode; // 视频播放模式
     bool m_playbackFinished;     // 视频是否结束
     bool m_islocal;
+    QString m_coverArtBase64; // 存储封面图片的base64数据
 
     QMediaPlayer *m_thumbnailPlayer; // 缩略图专用播放器
     QVideoSink *m_thumbnailSink;     // 缩略图专用视频接收器

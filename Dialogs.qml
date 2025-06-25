@@ -15,6 +15,7 @@ Item {
     property alias about: _about
     property alias previewDialog: _previewDialog
     property alias errorDialog: _errorDialog
+    property alias successDialog: _successDialog
     property alias saveLocationDialog: _saveLocationDialog
     property alias cameraSelectDialog: _cameraSelectDialog
     property alias recordingLayoutDialog: _recordingLayoutDialog
@@ -167,6 +168,12 @@ Item {
     MessageDialog {
         id: _errorDialog
         title: "Error"
+        buttons: MessageDialog.Ok
+    }
+
+    MessageDialog {
+        id: _successDialog
+        title: "Success"
         buttons: MessageDialog.Ok
     }
 

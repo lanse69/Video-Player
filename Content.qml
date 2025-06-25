@@ -342,12 +342,12 @@ Item {
 
         onDownloadFinished: function (filePath) {
             // 显示下载完成消息
-            content.dialogs.errorDialog.text = "Download finished: " + filePath;
-            content.dialogs.errorDialog.open();
+            content.dialogs.successDialog.text = "Download finished:\n" + filePath;
+            content.dialogs.successDialog.open();
         }
 
         onErrorOccurred: function (error) {
-            content.dialogs.errorDialog.text = "Download error: " + error;
+            content.dialogs.errorDialog.text = "Download error: \n" + error;
             content.dialogs.errorDialog.open();
         }
 

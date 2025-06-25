@@ -21,6 +21,14 @@ ApplicationWindow {
             actions.subtitle.enabled = mediaEngine.hasSubtitle
             actions.subtitle.checked = mediaEngine.subtitleVisible
         }
+        onPlayingChanged: {
+            if (mediaEngine.playing && playlistModel.currentIndex >= 0) {
+                var mediaUrl = playlistModel.getUrl(playlistModel.currentIndex)
+                if (mediaUrl) {
+                    histroyListModel.setHistroy(mediaUrl)
+                }
+            }
+        }
     }
 
     // 播放列表
@@ -41,6 +49,14 @@ ApplicationWindow {
                     DanmuRender.endDanmus()
                 }
             }
+        }
+    }
+
+    //历史记录的数据项
+    PlaylistModel {
+        id: histroyListModel
+        Component.onCompleted: {
+            histroy()
         }
     }
 
@@ -92,14 +108,6 @@ ApplicationWindow {
         }
         onCameraAudioChanged: actions.cameraMicrophone.checked = captureManager.cameraAudio
         onCameraChanged: actions.recordingLayout.enabled = captureManager.setCamera()
-    }
-
-    //历史记录的数据项
-    PlaylistModel {
-        id: histroyListModel
-        Component.onCompleted: {
-            histroy()
-        }
     }
 
     menuBar: MenuBar {
@@ -363,7 +371,9 @@ ApplicationWindow {
         anchors.fill: parent
         mediaEngine: mediaEngine
         playlistModel: playlistModel
+        histroyListModel: histroyListModel
         captureManager: captureManager
+        actions: actions
 
         // 双击全屏
         TapHandler {
@@ -453,6 +463,7 @@ ApplicationWindow {
         mediaEngine.stop()
         playlistModel.clear()
         title = "Video Player"
+        content.folderListModel.folder = ""
     }
 
     // 让菜单栏收回截图按键，保证截图时截图按键不挡住窗口画面
@@ -480,10 +491,6 @@ ApplicationWindow {
         id: dragHandler
         onFilesDropped: function (urls) {
             playlistModel.addMedias(urls)
-            // 添加到历史记录
-            for (var j = 0; j < urls.length; j++) {
-                histroyListModel.setHistroy(urls[j])
-            }
             // 如果当前没有播放，则播放第一个
             if (playlistModel.rowCount > 0 && !mediaEngine.playing) {
                 playlistModel.currentIndex = 0

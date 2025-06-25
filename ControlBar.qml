@@ -295,12 +295,11 @@ Rectangle {
             }
 
             //弹幕开关
-            Button{
+            ToolButton{
                 id:danmuSwitch
-                implicitWidth: 20
                 icon.name:"view-time-schedule-baselined"
                 onClicked: {
-                    danmInpustFrame.visible=true
+                    danmInpustFrame.visible = danmInpustFrame.visible ? false : true
                 }
             }
 
@@ -454,12 +453,19 @@ Rectangle {
         x:danmuSwitch.x
         y:danmuSwitch.y-height
         visible: false
+        enabled: captureManager.playerLayout !== CaptureManager.NotVideo
         TextArea{
             id:danmuInputBox
-            readOnly: content.mediaEngine.hasVideo  //当视频没有播放时不能输入弹幕
-            placeholderText: "请输入弹幕内容(限100字)"
+            readOnly: !mediaEngine.hasVideo || captureManager.playerLayout === CaptureManager.NotVideo  //当视频没有播放时不能输入弹幕
+            placeholderText: captureManager.playerLayout === CaptureManager.NotVideo ?
+                                 "该布局模式下无法发送弹幕" : mediaEngine.hasVideo ? "请输入弹幕内容(限100字)" : "未打开音视频文件"
             placeholderTextColor: "gray"
             Keys.onPressed: function(event) {
+                if (captureManager.playerLayout === CaptureManager.NotVideo) {
+                    event.accepted = true;
+                    return;
+                }
+
                 //输入回车键提交弹幕
                 if(event.key===Qt.Key_Enter||event.key===Qt.Key_Return){
                     content.danmuManager.addDanmu(content.mediaEngine.position,danmuInputBox.text)

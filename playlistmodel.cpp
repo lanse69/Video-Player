@@ -106,8 +106,7 @@ QUrl PlaylistModel::getUrl(int index) const
     return QUrl();
 }
 
-void PlaylistModel::move(
-    int preIndex, int newIndex, int num)
+void PlaylistModel::move(int preIndex, int newIndex, int num)
 {
     if (preIndex < 0 || newIndex < 0 || preIndex + num > m_mediaList.size()
         || newIndex > m_mediaList.size() || preIndex == newIndex) { //边界检查

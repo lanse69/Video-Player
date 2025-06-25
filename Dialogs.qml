@@ -54,8 +54,6 @@ Item {
             let url = urlInput.text.trim();
             if (url) {
                 playlistModel.addMedias([url]);
-                // 添加到历史记录
-                histroyListModel.setHistroy(url);
             }
         }
     }

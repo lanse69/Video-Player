@@ -9,7 +9,9 @@ Item {
     id:content
     property MediaEngine mediaEngine
     property PlaylistModel playlistModel
+    property PlaylistModel histroyListModel
     property CaptureManager captureManager
+    property Actions actions
     property alias dialogs: _dialogs
     property alias player: _player
     property alias controlBar: _controlBar
@@ -17,6 +19,7 @@ Item {
     property alias danmuTimer: _danmuTimer
     property alias danmuGenerater: _danmuGenerater
     property alias downloadManager: _downloadManager
+    property alias folderListModel: folderListModel
 
     focus: true
     Keys.onPressed: function(event) {
@@ -77,7 +80,7 @@ Item {
 
     Timer{
         id:_danmuTimer
-        running:mediaEngine.playing&&!actions.danmuSwitch.checked
+        running:mediaEngine.playing && !actions.danmuSwitch.checked && captureManager.playerLayout !== CaptureManager.NotVideo
         repeat: true
         interval: 1000
         onTriggered: {
@@ -89,10 +92,28 @@ Item {
 
     Repeater{
         id:_danmuGenerater
+        property var previousState: undefined
         visible: mediaEngine.playing
         anchors.fill: parent
         model:100
         delegate: Danmu{}
+    }
+
+    Connections {
+        target: captureManager
+
+        function onPlayerLayoutChanged() {
+            if (captureManager.playerLayout === CaptureManager.NotVideo) {
+                // 保存当前弹幕开关状态
+                _danmuGenerater.previousState = actions.danmuSwitch.checked
+                // 强制关闭弹幕
+                actions.danmuSwitch.checked = true
+            } else if (_danmuGenerater.previousState !== undefined) {
+                // 恢复之前的弹幕开关状态
+                actions.danmuSwitch.checked = _danmuGenerater.previousState
+                _danmuGenerater.previousState = undefined
+            }
+        }
     }
 
     //播放列表的搜索框
@@ -222,25 +243,24 @@ Item {
             folderListModel.folder=folderUrl.toString().replace(/\/[^\/]*$/,"/")
         }
     }
+
     FolderListModel{
         id:folderListModel
         showFiles: true
         showDirs: false
         nameFilters: ["*.mp4","*.avi","*.mkv","*.mov","*.wmv","*.ogg","*.mp3","*.wav","*.flac","*.ogg","*.wav"]
         onFolderChanged: {
+            if (folder.toString() !== "") {
                 //初始化当前文件夹的所有文件的url
                 let files=[]
-                for(let i=0;i<folderListModel.count;i++){
-                    console.log(i)
+                for(let i=0; i < folderListModel.count; i++){
                     files.push(folderListModel.get(i,"fileUrl"))
                 }
 
                 //添加文件和设置历史记录
                 playlistModel.addMedias(files)
-                for(let i of files){
-                    histroyListModel.setHistroy(i)
-                }
                 playlistModel.currentIndex=playlistModel.indexByUrl(readFiles.openUrl)
+            }
         }
     }
 

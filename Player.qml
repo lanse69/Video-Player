@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
 import VideoPlayer
-import "DanmuRender.js" as DanmuRender
+// import "DanmuRender.js" as DanmuRender
 
 Item {
     property MediaEngine mediaEngine
@@ -68,6 +68,117 @@ Item {
         asynchronous: true // 异步加载
     }
 
+    VideoOutput {
+        id: _cameraOutput
+        anchors.fill: parent
+        visible: cameraActive
+    }
+
+    // 录制布局
+    Item {
+        anchors.fill: parent
+        visible: cameraActive
+
+        // 左右布局
+        RowLayout {
+            id: leftRight
+            anchors.fill: parent
+            spacing: 5
+
+            VideoOutput {
+                id: leftMedia
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                fillMode: VideoOutput.PreserveAspectFit
+            }
+
+            VideoOutput {
+                id: rightCamera
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+        }
+
+        // 上下布局
+        ColumnLayout {
+            id: topBottom
+            anchors.fill: parent
+            spacing: 5
+
+            VideoOutput {
+                id: topMedia
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                fillMode: VideoOutput.PreserveAspectFit
+            }
+
+            VideoOutput {
+                id: bottomCamera
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+        }
+    }
+
+    Connections {
+        target: captureManager
+
+        function onPlayerLayoutChanged() {
+            closeVideos()
+            if(captureManager.playerLayout === CaptureManager.NotVideo){
+                captureManager.setVideoSink(_cameraOutput.videoSink)
+                _cameraOutput.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.LayoutNull){
+                mediaEngine.setVideoSink(videoOutput.videoSink)
+                videoOutput.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.SideBySide) {
+                mediaEngine.setVideoSink(leftMedia.videoSink)
+                captureManager.setVideoSink(rightCamera.videoSink)
+                leftRight.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.TopBottom) {
+                mediaEngine.setVideoSink(topMedia.videoSink)
+                captureManager.setVideoSink(bottomCamera.videoSink)
+                topBottom.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.Pip){
+                mediaEngine.setVideoSink(smallVideoOutput.videoSink)
+                captureManager.setVideoSink(_cameraOutput.videoSink)
+                _cameraOutput.visible = true
+                smallWindow.show()
+            }
+        }
+
+        function onCameraChanged() {
+            if(captureManager.playerLayout === CaptureManager.NotVideo){
+                captureManager.setVideoSink(_cameraOutput.videoSink)
+                _cameraOutput.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.LayoutNull){
+                mediaEngine.setVideoSink(videoOutput.videoSink)
+                videoOutput.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.SideBySide) {
+                mediaEngine.setVideoSink(leftMedia.videoSink)
+                captureManager.setVideoSink(rightCamera.videoSink)
+                leftRight.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.TopBottom) {
+                mediaEngine.setVideoSink(topMedia.videoSink)
+                captureManager.setVideoSink(bottomCamera.videoSink)
+                topBottom.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.Pip){
+                mediaEngine.setVideoSink(smallVideoOutput.videoSink)
+                captureManager.setVideoSink(_cameraOutput.videoSink)
+                _cameraOutput.visible = true
+                smallWindow.show()
+            }
+        }
+    }
+
+    function closeVideos(){
+        videoOutput.visible = false
+        _cameraOutput.visible = false
+        smallWindow.hide()
+        leftRight.visible = false
+        topBottom.visible = false
+    }
+
     // 字幕显示区域
     Rectangle {
         id: subtitleContainer
@@ -79,7 +190,6 @@ Item {
         }
         height: subtitleText.height + 20
         color: "transparent"
-        z: 5
         visible: subtitleVisible && currentSubtitle !== "" && captureManager.playerLayout !== CaptureManager.NotVideo && captureManager.playerLayout !== CaptureManager.Pip
 
         Text {
@@ -276,119 +386,5 @@ Item {
             smallWindow.hide()
             mediaEngine.setVideoSink(videoOutput.videoSink)
         }
-    }
-
-    VideoOutput {
-        id: _cameraOutput
-        anchors.fill: parent
-        visible: cameraActive
-    }
-
-    // 录制布局
-    Item {
-        anchors.fill: parent
-        visible: cameraActive
-
-        // 左右布局
-        RowLayout {
-            id: leftRight
-            anchors.fill: parent
-            spacing: 5
-
-            VideoOutput {
-                id: leftMedia
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                fillMode: VideoOutput.PreserveAspectFit
-            }
-
-            VideoOutput {
-                id: rightCamera
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-            }
-        }
-
-        // 上下布局
-        ColumnLayout {
-            id: topBottom
-            anchors.fill: parent
-            spacing: 5
-
-            VideoOutput {
-                id: topMedia
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                fillMode: VideoOutput.PreserveAspectFit
-            }
-
-            VideoOutput {
-                id: bottomCamera
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-            }
-        }
-    }
-
-    Connections {
-        target: captureManager
-
-        function onPlayerLayoutChanged() {
-            closeVideo()
-            if(captureManager.playerLayout === CaptureManager.NotVideo){
-                captureManager.setVideoSink(_cameraOutput.videoSink)
-                _cameraOutput.visible = true
-            } else if(captureManager.playerLayout === CaptureManager.LayoutNull){
-                mediaEngine.setVideoSink(videoOutput.videoSink)
-                videoOutput.visible = true
-            } else if(captureManager.playerLayout === CaptureManager.SideBySide) {
-                mediaEngine.setVideoSink(leftMedia.videoSink)
-                captureManager.setVideoSink(rightCamera.videoSink)
-                leftRight.visible = true
-            } else if(captureManager.playerLayout === CaptureManager.TopBottom) {
-                mediaEngine.setVideoSink(topMedia.videoSink)
-                captureManager.setVideoSink(bottomCamera.videoSink)
-                topBottom.visible = true
-            } else if(captureManager.playerLayout === CaptureManager.Pip){
-                mediaEngine.setVideoSink(smallVideoOutput.videoSink)
-                captureManager.setVideoSink(_cameraOutput.videoSink)
-                _cameraOutput.visible = true
-                smallWindow.show()
-            }
-        }
-
-        function onCameraChanged() {
-            if(captureManager.playerLayout === CaptureManager.NotVideo){
-                content.damuTimer.stop()
-                DanmuRender.endDanmus()
-                captureManager.setVideoSink(_cameraOutput.videoSink)
-                _cameraOutput.visible = true
-            } else if(captureManager.playerLayout === CaptureManager.LayoutNull){
-                mediaEngine.setVideoSink(videoOutput.videoSink)
-                videoOutput.visible = true
-            } else if(captureManager.playerLayout === CaptureManager.SideBySide) {
-                mediaEngine.setVideoSink(leftMedia.videoSink)
-                captureManager.setVideoSink(rightCamera.videoSink)
-                leftRight.visible = true
-            } else if(captureManager.playerLayout === CaptureManager.TopBottom) {
-                mediaEngine.setVideoSink(topMedia.videoSink)
-                captureManager.setVideoSink(bottomCamera.videoSink)
-                topBottom.visible = true
-            } else if(captureManager.playerLayout === CaptureManager.Pip){
-                mediaEngine.setVideoSink(smallVideoOutput.videoSink)
-                captureManager.setVideoSink(_cameraOutput.videoSink)
-                _cameraOutput.visible = true
-                smallWindow.show()
-            }
-        }
-    }
-
-    function closeVideo(){
-        videoOutput.visible = false
-        _cameraOutput.visible = false
-        smallWindow.hide()
-        leftRight.visible = false
-        topBottom.visible = false
-        content.damuTimer.start()
     }
 }

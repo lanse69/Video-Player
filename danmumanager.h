@@ -2,6 +2,8 @@
 
 #include <QObject>
 #include <QQmlEngine>
+#include <QDir>
+
 #include "danmu.h"
 #include "danmutrack.h"
 #include "font.h"
@@ -27,6 +29,9 @@ public:
     Q_INVOKABLE void saveDanmu();                                 //写入文件，保存弹幕
     Q_INVOKABLE QList<QList<QVariant>> danmus(
         int width, int num, qint64 currentTime); //根据提供的屏幕宽度和需要弹幕数量提供弹幕
+
+    Q_INVOKABLE QDir generateFilePath() const;
+    Q_INVOKABLE QString danmuDirPath() const;
 
     //暴露属性的getter和setter
     int speed();

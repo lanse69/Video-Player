@@ -43,6 +43,12 @@ Item {
             }
         }
 
+        BusyIndicator {
+            anchors.centerIn: parent
+            running: mediaEngine && mediaEngine.mediaStatus === MediaEngine.Loading && !mediaEngine.isLocal && mediaEngine.playing
+            visible: running
+        }
+
         // 视频输出（根据模式选择填充方式）
         VideoOutput {
             id: videoOutput
@@ -250,22 +256,13 @@ Item {
         visible: cameraActive
     }
 
-    // Connections {
-    //     target: captureManager
-    //     function onCameraChanged() {
-    //         if (captureManager && captureManager.cameraSession) {
-    //             captureManager.setVideoSink(_cameraOutput.videoSink)
-    //         }
-    //     }
-    // }
-
     // 录制布局
     Item {
         anchors.fill: parent
         visible: cameraActive
 
         // 左右布局
-        ColumnLayout {
+        RowLayout {
             id: leftRight
             anchors.fill: parent
             spacing: 5
@@ -285,7 +282,7 @@ Item {
         }
 
         // 上下布局
-        RowLayout {
+        ColumnLayout {
             id: topBottom
             anchors.fill: parent
             spacing: 5
@@ -310,6 +307,29 @@ Item {
 
         function onPlayerLayoutChanged() {
             closeVideo()
+            if(captureManager.playerLayout === CaptureManager.NotVideo){
+                captureManager.setVideoSink(_cameraOutput.videoSink)
+                _cameraOutput.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.LayoutNull){
+                mediaEngine.setVideoSink(videoOutput.videoSink)
+                videoOutput.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.SideBySide) {
+                mediaEngine.setVideoSink(leftMedia.videoSink)
+                captureManager.setVideoSink(rightCamera.videoSink)
+                leftRight.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.TopBottom) {
+                mediaEngine.setVideoSink(topMedia.videoSink)
+                captureManager.setVideoSink(bottomCamera.videoSink)
+                topBottom.visible = true
+            } else if(captureManager.playerLayout === CaptureManager.Pip){
+                mediaEngine.setVideoSink(smallVideoOutput.videoSink)
+                captureManager.setVideoSink(_cameraOutput.videoSink)
+                _cameraOutput.visible = true
+                smallWindow.show()
+            }
+        }
+
+        function onCameraChanged() {
             if(captureManager.playerLayout === CaptureManager.NotVideo){
                 captureManager.setVideoSink(_cameraOutput.videoSink)
                 _cameraOutput.visible = true

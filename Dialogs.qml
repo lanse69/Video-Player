@@ -7,14 +7,21 @@ import VideoPlayer
 
 Item {
     property CaptureManager captureManager
+    property PlaylistModel playlistModel
+    property DanmuManager danmuManager
+    property DownloadManager downloadManager
     property alias fileOpen: _fileOpen
-    property alias aboutQt: _aboutQt
+    property alias urlInputDialog: _urlInputDialog
+    property alias about: _about
     property alias previewDialog: _previewDialog
     property alias errorDialog: _errorDialog
     property alias saveLocationDialog: _saveLocationDialog
     property alias cameraSelectDialog: _cameraSelectDialog
     property alias recordingLayoutDialog: _recordingLayoutDialog
     property alias timedPauseDialog: _timedPauseDialog
+    property alias attentionDialog: _attentionDialog
+    property alias downloadDialog: _downloadDialog
+    property alias timedPauseFinishedDialog: _timedPauseFinishedDialog
 
     FileDialog {
         id: _fileOpen
@@ -26,13 +33,79 @@ Item {
         fileMode: FileDialog.OpenFiles
     }
 
+    Dialog {
+        id: _urlInputDialog
+        title: "Open Network URL"
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 400
+
+        ColumnLayout {
+            width: parent.width
+            Label {
+                text: "Enter video URL: "
+            }
+            TextField {
+                id: urlInput
+                Layout.fillWidth: true
+            }
+        }
+
+        onAccepted: {
+            let url = urlInput.text.trim();
+            if (url) {
+                playlistModel.addMedias([url]);
+                // 添加到历史记录
+                histroyListModel.setHistroy(url);
+            }
+        }
+    }
+
+    // 下载进度
+    Dialog {
+        id: _downloadDialog
+        title: "Downloading Video"
+        modal: true
+        standardButtons: Dialog.Cancel
+
+        property alias progress: progressBar.value
+        property alias speed: speedLabel.text
+
+        onRejected: downloadManager.cancelDownload()
+
+        ColumnLayout {
+            width: parent.width
+            spacing: 10
+
+            ProgressBar {
+                id: progressBar
+                Layout.fillWidth: true
+                from: 0
+                to: 100
+                value: 0
+            }
+
+            Label {
+                text: "Progress: " + Math.round(progressBar.value) + "%"
+            }
+
+            Label {
+                id: speedLabel
+                text: "Speed: 0 KB/s"
+            }
+        }
+    }
+
     MessageDialog {
-        id: _aboutQt
-        title: qsTr("About Qt")
+        id: _about
+        title: qsTr("About")
         modality: Qt.WindowModal
         buttons: MessageDialog.Ok
         text: qsTr("This is a video player.")
         informativeText: qsTr("This application uses Qt version 6.9.1")
+        detailedText: "Copyright©2025
+                    \nLan yin yin(lan_yinyin@qq.com)
+                    \nZhou jun(zhoujun1108@126.com)
+                    \nZhu Can Yin(2892825621@qq.com)"
     }
 
     Dialog {
@@ -100,8 +173,9 @@ Item {
 
     Dialog {
         id: _saveLocationDialog
-        title: "截图与录制保存位置"
+        title: "Save Location"
         modal: true
+        width: 500
         standardButtons: Dialog.Close
 
         ColumnLayout {
@@ -164,6 +238,102 @@ Item {
                 }
             }
 
+            // 历史记录路径
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 5
+
+                Label {
+                    text: "历史记录保存位置:"
+                    font.bold: true
+                    color: "red"
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 40
+                    color: "white"
+                    radius: 5
+                    border.color: "gray"
+
+                    Label {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        text: playlistModel ? playlistModel.generateFilePath() : ""
+                        elide: Text.ElideMiddle
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
+
+            // 弹幕路径
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 5
+
+                Label {
+                    text: "弹幕保存位置:"
+                    font.bold: true
+                    color: "red"
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 40
+                    color: "white"
+                    radius: 5
+                    border.color: "gray"
+
+                    Label {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        text: danmuManager ? danmuManager.danmuDirPath() : ""
+                        elide: Text.ElideMiddle
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
+
+            // 下载路径
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 5
+
+                Label {
+                    text: "下载位置:"
+                    font.bold: true
+                    color: "red"
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 40
+                    color: "white"
+                    radius: 5
+                    border.color: "gray"
+
+                    Label {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        text: downloadManager ? downloadManager.downloadDirPath() : ""
+                        elide: Text.ElideMiddle
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
+        }
+    }
+
+    Dialog{
+        id: _attentionDialog
+        title: "Attention"
+        modal: true
+        standardButtons: Dialog.Close
+
+        ColumnLayout {
+            width: parent.width
+            spacing: 15
+
             Label {
                 text: "麦克风的选项是决定是否录制时是否录音\n只有在录制前的选择才可改变，录制中更改无法改变"
                 font.bold: true
@@ -182,6 +352,7 @@ Item {
         id: _cameraSelectDialog
         title: "Select Camera"
         modal: true
+        width: 400
         standardButtons: Dialog.Ok | Dialog.Cancel
 
         ColumnLayout {
@@ -277,10 +448,10 @@ Item {
 
         onAccepted: {
             var layout = CaptureManager.LayoutNull;
-            if (layoutGroup.buttons[1].checked) layout = CaptureManager.SideBySide;
-            else if (layoutGroup.buttons[2].checked) layout = CaptureManager.TopBottom;
+            if (layoutGroup.buttons[3].checked) layout = CaptureManager.NotVideo;
+            else if (layoutGroup.buttons[2].checked) layout = CaptureManager.SideBySide;
+            else if (layoutGroup.buttons[1].checked) layout = CaptureManager.TopBottom;
             else if (layoutGroup.buttons[0].checked) layout = CaptureManager.Pip;
-            else if (layoutGroup.buttons[3].checked) layout = CaptureManager.NotVideo;
 
             captureManager.playerLayout = layout;
 
@@ -428,5 +599,17 @@ Item {
         interval: 2000
         running: timedPauseNotification.opened
         onTriggered: timedPauseNotification.close()
+    }
+
+    // 倒计时结束对话框
+    Dialog {
+        id: _timedPauseFinishedDialog
+        title: "Timed Pause"
+        modal: true
+        standardButtons: Dialog.Ok
+
+        Label {
+            text: "The timed pause period has ended."
+        }
     }
 }

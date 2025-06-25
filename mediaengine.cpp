@@ -24,6 +24,7 @@ MediaEngine::MediaEngine(QObject *parent)
     , m_playbackFinished{false}
     , m_thumbnailPlayer{nullptr}
     , m_thumbnailSink{nullptr}
+    , m_islocal(true)
 {
     m_player = new QMediaPlayer(this);
     m_audioOutput = new QAudioOutput(this);
@@ -65,7 +66,13 @@ MediaEngine::MediaEngine(QObject *parent)
     });
 
     // 到设定的时间暂停
-    connect(m_timedPause, &QTimer::timeout, this, &MediaEngine::pause);
+    connect(m_timedPause, &QTimer::timeout, this, [this]() {
+        pause();
+        emit timedPauseFinished(); // 结束信号
+    });
+
+    // 暂停倒计时每秒减一
+    connect(m_pauseCountdown, &QTimer::timeout, this, &MediaEngine::updatePauseTimeRemaining);
 }
 
 QVideoSink *MediaEngine::videoSink() const
@@ -161,16 +168,26 @@ void MediaEngine::setMedia(const QUrl &url)
 {
     if (url.isEmpty()) return;
 
+    bool wasLocal = m_islocal;
+    m_islocal = url.isLocalFile();
+
     m_subtitles.clear();
     m_hasSubtitle = false;
     m_subtitleText = "";
     emit hasSubtitleChanged();
     emit subtitleTextChanged();
 
+    // 检查URL类型
+    if (url.isLocalFile()) {
+        // 本地文件 - 加载字幕
+        loadSubtitle(url);
+    }
+
+    if (url.isLocalFile() != wasLocal) emit localChanged();
+
     m_player->setSource(url);
     emit currentMediaChanged();
 
-    loadSubtitle(url); // 加载字幕文件
     emit subtitleVisibleChanged();
 }
 
@@ -437,6 +454,12 @@ qreal MediaEngine::videoAspectRatio() const
     return 0;
 }
 
+bool MediaEngine::isLocal()
+{
+    m_islocal = currentMedia().isLocalFile();
+    return m_islocal;
+}
+
 MediaEngine::PlaybackMode MediaEngine::playbackMode() const
 {
     return m_playbackMode;
@@ -515,14 +538,49 @@ void MediaEngine::timedPauseStart(int minutes)
 {
     if (minutes == 0) {
         m_pauseTime = 0;
+        m_pauseTimeRemaining = 0;
         m_timedPause->stop();
+        m_pauseCountdown->stop();
     } else {
         m_pauseTime = minutes;
         m_timedPause->start(minutes * 60 * 1000);
+        m_pauseTimeRemaining = minutes * 60;
+        m_pauseCountdown->start();
     }
+    emit pauseTimeRemainingChanged();
 }
 
 int MediaEngine::pauseTime()
 {
     return m_pauseTime;
+}
+
+int MediaEngine::pauseTimeRemaining() const
+{
+    return m_pauseTimeRemaining;
+}
+
+QString MediaEngine::pauseCountdown()
+{
+    if (m_pauseTimeRemaining > 0) {
+        int hours = m_pauseTimeRemaining / 3600;
+        int minutes = (m_pauseTimeRemaining % 3600) / 60;
+        int seconds = (m_pauseTimeRemaining % 3600) % 60;
+        return QString("%1:%2:%3")
+            .arg(hours, 2, 10, QLatin1Char('0'))
+            .arg(minutes, 2, 10, QLatin1Char('0'))
+            .arg(seconds, 2, 10, QLatin1Char('0'));
+    } else {
+        return "00:00:00";
+    }
+}
+
+void MediaEngine::updatePauseTimeRemaining()
+{
+    if (m_pauseTimeRemaining == 0) {
+        m_pauseCountdown->stop();
+    } else {
+        --m_pauseTimeRemaining;
+        emit pauseTimeRemainingChanged();
+    }
 }

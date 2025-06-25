@@ -20,6 +20,9 @@ ApplicationWindow {
             actions.subtitle.enabled = mediaEngine.hasSubtitle
             actions.subtitle.checked = mediaEngine.subtitleVisible
         }
+        onLocalChanged: {
+            content.controlBar.downloadButton.visible = !mediaEngine.isLocal
+        }
     }
 
     // 播放列表
@@ -45,9 +48,7 @@ ApplicationWindow {
 
     CaptureManager {
         id: captureManager
-        onScreenshotCaptured: {
-            content.dialogs.previewDialog.open()
-        }
+        onScreenshotCaptured: content.dialogs.previewDialog.open()
         onErrorOccurred: function(error) {
             content.dialogs.errorDialog.text = error;
             content.dialogs.errorDialog.open();
@@ -92,6 +93,7 @@ ApplicationWindow {
             }
         }
         onCameraAudioChanged: actions.cameraMicrophone.checked = captureManager.cameraAudio
+        onCameraChanged: actions.recordingLayout.enabled = captureManager.setCamera()
     }
 
     //历史记录的数据项
@@ -107,6 +109,10 @@ ApplicationWindow {
         Menu {
             title: qsTr("File")
             MenuItem { action: actions.open }
+            MenuItem { action: actions.openUrl }
+            MenuSeparator {}
+            MenuItem { action: actions.download }
+            MenuSeparator {}
             MenuItem { action: actions.close }
             MenuSeparator {}
             Menu{
@@ -202,8 +208,6 @@ ApplicationWindow {
                 MenuSeparator {}
                 MenuItem { action: actions.cameraMicrophone }
             }
-            MenuSeparator {}
-            MenuItem { action: actions.saveLocation }
         }
         Menu{
             title:"Danmu"
@@ -211,8 +215,8 @@ ApplicationWindow {
                 TextArea{
                     id:danmuInputBox
                     anchors.fill: parent
-                    readOnly: !content.mediaEngine.playing      //当视频没有播放时不能输入弹幕
-                    placeholderText: "请输入搜索内容(限100字)"
+                    readOnly: !content.mediaEngine.playing  //当视频没有播放时不能输入弹幕
+                    placeholderText: "请输入弹幕内容(限100字)"
                     placeholderTextColor: "gray"
                     Keys.onPressed: function(event) {
                         //输入回车键提交弹幕
@@ -241,13 +245,19 @@ ApplicationWindow {
 
         Menu {
             title: qsTr("Help")
-            MenuItem { action: actions.aboutQt }
+            MenuItem { action: actions.about}
+            MenuSeparator {}
+            MenuItem { action: actions.saveLocation }
+            MenuItem { action: actions.attention }
         }
     }
 
     Actions {
         id: actions
         open.onTriggered: content.dialogs.fileOpen.open()
+        openUrl.onTriggered: content.dialogs.urlInputDialog.open()
+        download.enabled: mediaEngine && !mediaEngine.isLocal && mediaEngine.currentMedia.toString() !== ""
+        download.onTriggered: content.downloadManager.nowDownload();
         close.onTriggered: closeVideo()
         exit.onTriggered: Qt.quit()
         play.onTriggered: mediaEngine.play()
@@ -278,7 +288,7 @@ ApplicationWindow {
                 playlistModel.currentIndex = newIndex
             }
         }
-        aboutQt.onTriggered: content.dialogs.aboutQt.open()
+        about.onTriggered: content.dialogs.about.open()
         zeroPointFiveRate.onTriggered: mediaEngine.setPlaybackRate(0.5)
         oneRate.onTriggered: mediaEngine.setPlaybackRate(1)
         onePointFiveRate.onTriggered: mediaEngine.setPlaybackRate(1.5)
@@ -302,21 +312,22 @@ ApplicationWindow {
         stopRecord.onTriggered: captureManager.stopRecording()
         microphone.onTriggered: captureManager.recordAudio = microphone.checked
         saveLocation.onTriggered: content.dialogs.saveLocationDialog.open()
+        attention.onTriggered: content.dialogs.attentionDialog.open()
         camera.enabled: captureManager.hasCamera
         camera.onTriggered: {
-            if(captureManager.playerLayout === CaptureManager.LayoutNull){
-                content.dialogs.recordingLayoutDialog.open();
-                mediaEngine.pause()
-            } else {
-                if(captureManager.setCamera()){
+            if(captureManager.setCamera()){
+                if(captureManager.playerLayout === CaptureManager.LayoutNull){
+                    content.dialogs.recordingLayoutDialog.open();
+                    mediaEngine.pause()
+                }else{
                     mediaEngine.pause()
                     captureManager.startCameraRecording()
-                } else {
-                    if (captureManager.availableCameras.length > 1) {
-                        content.dialogs.cameraSelectDialog.open()
-                    } else if (captureManager.availableCameras.length === 1) {
-                        captureManager.selectCamera(captureManager.availableCameras[0].id)
-                    }
+                }
+            } else {
+                if (captureManager.availableCameras.length > 1) {
+                    content.dialogs.cameraSelectDialog.open()
+                } else if (captureManager.availableCameras.length === 1) {
+                    captureManager.selectCamera(captureManager.availableCameras[0].id)
                 }
             }
         }
@@ -330,6 +341,7 @@ ApplicationWindow {
         stopCamera.onTriggered: captureManager.stopCameraRecording()
         cameraMicrophone.onTriggered: captureManager.cameraAudio = cameraMicrophone.checked
         cameraDevice.onTriggered: content.dialogs.cameraSelectDialog.open()
+        recordingLayout.enabled: captureManager.setCamera()
         recordingLayout.onTriggered: content.dialogs.recordingLayoutDialog.open()
         fullScreen.onTriggered: { // 全屏
             if (!content.player.smallWindowMode) { // 小窗播放时不能全屏
@@ -385,13 +397,48 @@ ApplicationWindow {
                     menuBar.visible = false // 进入全屏时隐藏菜单栏
                 }
             }
+
+            onTapped: { // 单击暂停播放或开始播放
+                mediaEngine.playing ? mediaEngine.pause() : mediaEngine.play()
+            }
+        }
+
+        // 滑动切换视频
+        DragHandler {
+            id: slideHandler
+            target: null
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen
+
+            onActiveChanged: {
+                var startY = 0
+                var endY = 0
+                var isSlide = false
+                if (!active) {
+                    var distance = centroid.position.y - centroid.pressPosition.y
+                    if (Math.abs(distance) > 20) { // 滑动距离大于20像素才算滑动
+                        if (distance < 0) { // 向上滑动，下一个视频
+                            if (playlistModel.rowCount > 0) {
+                                var nextIndex = playlistModel.currentIndex + 1
+                                if (nextIndex >= playlistModel.rowCount) nextIndex = 0
+                                playlistModel.currentIndex = nextIndex
+                            }
+                        } else { // 向下滑动，上一个视频
+                            if (playlistModel.rowCount > 0) {
+                                var preIndex = playlistModel.currentIndex - 1
+                                if (preIndex < 0) preIndex = playlistModel.rowCount - 1
+                                playlistModel.currentIndex = preIndex
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
-    Connections { // 连接视频结束的信号
+    Connections {
         target: mediaEngine
 
-        function onPlaybackFinishedChanged() {
+        function onPlaybackFinishedChanged() { // 连接视频结束的信号
             if (mediaEngine.playbackFinished) { // 检查视频结束
                 switch(mediaEngine.playbackMode) { // 检查视频的播放模式
                     case MediaEngine.Sequential: // 顺序播放
@@ -417,6 +464,10 @@ ApplicationWindow {
                 mediaEngine.setPlaybackFinished(false) // 重置播放完成状态
             }
         }
+
+        function onTimedPauseFinished() { // 连接定时暂停结束信号
+            content.dialogs.timedPauseFinishedDialog.open();
+        }
     }
 
     function closeVideo() {
@@ -425,6 +476,7 @@ ApplicationWindow {
         title = "Video Player"
     }
 
+    // 让菜单栏收回截图按键，保证截图时截图按键不挡住窗口画面
     function takeScreenshot(type) {
         screenshotTimer.type = type
         screenshotTimer.start()
@@ -471,7 +523,6 @@ ApplicationWindow {
         border.width: 4
         radius: 8
         visible: dragHandler.dragActive
-        // visible: dropArea.containsDrag
 
         Label {
             anchors.centerIn: parent

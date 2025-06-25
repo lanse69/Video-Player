@@ -15,10 +15,31 @@ Item {
     property alias danmuManager: _danmuManager
     property alias danmuTimer: _danmuTimer
     property alias danmuGenerater: _danmuGenerater
+    property alias downloadManager: _downloadManager
+
+    focus: true
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Left) {  // 左方向键，快退5秒
+            mediaEngine.setPosition(mediaEngine.position - 5000);
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Right) { // 右方向键，快进5秒
+            mediaEngine.setPosition(mediaEngine.position + 5000);
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Up) { // 上方向键，音量加5
+            mediaEngine.setVolume(mediaEngine.volume + 0.05);
+            event.accepted = true;
+        } else if (event.key === Qt.Key_Down) { // 下方向键，音量减5
+            mediaEngine.setVolume(mediaEngine.volume - 0.05);
+            event.accepted = true;
+        }
+    }
 
     Dialogs {
         id: _dialogs
         captureManager: content.captureManager
+        playlistModel: content.playlistModel
+        danmuManager: content.danmuManager
+        downloadManager: content.downloadManager
     }
 
     // 视频播放区域
@@ -50,7 +71,7 @@ Item {
 
     //弹幕渲染,由弹幕管理器，弹幕计时器（定时读取弹幕），弹幕生成器,弹幕渲染器配合完成
     DanmuManager{
-        id:_danmuManager
+        id: _danmuManager
     }
 
     Timer{
@@ -196,6 +217,92 @@ Item {
             for(let i of dialogs.fileOpen.selectedFiles){
                 histroyListModel.setHistroy(i)
             }
+        }
+    }
+
+    DownloadManager {
+        id: _downloadManager
+        onProgressChanged: {
+            dialogs.downloadDialog.progress = progress * 100;
+        }
+        onSpeedChanged: {
+            var speedKB = speed / 1024;
+            var speedText;
+            if (speedKB > 1024) {
+                speedText = (speedKB / 1024).toFixed(1) + " MB/s";
+            } else {
+                speedText = speedKB.toFixed(1) + " KB/s";
+            }
+            dialogs.downloadDialog.speed = "Speed: " + speedText;
+        }
+        onDownloadingChanged: {
+            if (downloading) {
+                dialogs.downloadDialog.progress = 0;
+                dialogs.downloadDialog.speed = "Speed: 0 KB/s";
+                dialogs.downloadDialog.open();
+            } else {
+                dialogs.downloadDialog.close();
+            }
+        }
+        onDownloadFinished: function (filePath) {
+            // 显示下载完成消息
+            content.dialogs.errorDialog.text = "Download finished: " + filePath;
+            content.dialogs.errorDialog.open();
+        }
+        onErrorOccurred: function (error) {
+            content.dialogs.errorDialog.text = "Download error: " + error;
+            content.dialogs.errorDialog.open();
+        }
+
+        function nowDownload () {
+            // 获取当前播放项在播放列表中的标题
+            var currentIndex = playlistModel.currentIndex;
+            var title = playlistModel.data(playlistModel.index(currentIndex, 0), PlaylistModel.TitleRole);
+            // 提取文件名
+            var baseName = title;
+            // 如果标题为空，则使用URL的文件名部分
+            if (baseName === "") {
+                var urlString = mediaEngine.currentMedia.toString();
+                var lastSlash = urlString.lastIndexOf('/');
+                if (lastSlash !== -1) {
+                    baseName = urlString.substring(lastSlash + 1);
+                    // 去掉可能存在的查询参数
+                    var questionMark = baseName.indexOf('?');
+                    if (questionMark !== -1) {
+                        baseName = baseName.substring(0, questionMark);
+                    }
+                } else {
+                    baseName = "video";
+                }
+            }
+            // 移除非法字符
+            baseName = baseName.replace(/[\\/:*?"<>|]/g, '_');
+            // 检查是否已有扩展名
+            var hasExtension = false;
+            // 常见视频扩展名列表
+            var videoExtensions = [".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".webm", ".mp3", ".wav", ".ogg"];
+
+            for (var i = 0; i < videoExtensions.length; i++) {
+                if (baseName.toLowerCase().endsWith(videoExtensions[i])) {
+                    hasExtension = true;
+                    break;
+                }
+            }
+
+            // 如果没有扩展名，则添加.mp4扩展名
+            var fileName = baseName;
+            if (!hasExtension) {
+                fileName += ".mp4";
+            }
+
+            if (content.downloadManager.downloading) {
+                content.dialogs.errorDialog.text = "Another download is already in progress";
+                content.dialogs.errorDialog.open();
+                return;
+            }
+
+            // 触发下载操作
+            content.downloadManager.download(mediaEngine.currentMedia, fileName);
         }
     }
 }

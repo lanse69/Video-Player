@@ -40,6 +40,12 @@ bool DragDropManager::eventFilter(QObject *watched, QEvent *event)
             bool hasSupported = false;
             const auto urls = mimeData->urls();
             for (const QUrl &url : urls) {
+                // 检查是否是网络URL
+                if (url.scheme().startsWith("http")) {
+                    hasSupported = true;
+                    continue;
+                }
+
                 QString localPath = url.toLocalFile();
                 if (localPath.isEmpty()) continue;
 
@@ -74,6 +80,12 @@ bool DragDropManager::eventFilter(QObject *watched, QEvent *event)
             QList<QUrl> supportedUrls;
             const auto urls = mimeData->urls();
             for (const QUrl &url : urls) {
+                // 检查是否是网络URL
+                if (url.scheme().startsWith("http")) {
+                    supportedUrls.append(url);
+                    continue;
+                }
+
                 QString localPath = url.toLocalFile();
                 if (localPath.isEmpty()) continue;
 

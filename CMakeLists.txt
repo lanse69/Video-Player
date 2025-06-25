@@ -25,6 +25,7 @@ qt_add_qml_module(appVideo-Player
         font.h font.cpp
         danmutrack.h danmutrack.cpp
         danmumanager.h danmumanager.cpp
+        downloadmanager.h downloadmanager.cpp
     QML_FILES
         Main.qml
         Actions.qml

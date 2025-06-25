@@ -31,12 +31,13 @@ class MediaEngine : public QObject
     // 播放速率
     Q_PROPERTY(qreal playbackRate READ playbackRate WRITE setPlaybackRate NOTIFY playbackRateChanged)
     Q_PROPERTY(qreal videoAspectRatio READ videoAspectRatio NOTIFY videoAspectRatioChanged) // 视频宽高比
-
     // 视频播放模式
     Q_PROPERTY(PlaybackMode playbackMode READ playbackMode WRITE setPlaybackMode NOTIFY playbackModeChanged)
-
     // 视频是否结束
     Q_PROPERTY(bool playbackFinished READ playbackFinished WRITE setPlaybackFinished NOTIFY playbackFinishedChanged)
+
+    Q_PROPERTY(bool isLocal READ isLocal NOTIFY localChanged)
+    Q_PROPERTY(int pauseTimeRemaining READ pauseTimeRemaining NOTIFY pauseTimeRemainingChanged) // 定时暂停倒计时
 
 public:
     explicit MediaEngine(QObject *parent = nullptr);
@@ -64,8 +65,10 @@ public:
     qreal playbackRate() const; // 返回播放速率
     qreal videoAspectRatio() const; // 返回视频的宽高比
     PlaybackMode playbackMode() const;         // 返回视频播放模式
-    Q_INVOKABLE bool playbackFinished() const; // 返回视频是否结束
+    bool isLocal();
+    int pauseTimeRemaining() const; // 返回暂停倒计时
 
+    Q_INVOKABLE bool playbackFinished() const; // 返回视频是否结束
     Q_INVOKABLE void play();
     Q_INVOKABLE void pause();
     Q_INVOKABLE void stop();
@@ -83,6 +86,7 @@ public:
 
     Q_INVOKABLE void timedPauseStart(int minutes); // 定时暂停开始
     Q_INVOKABLE int pauseTime();                   // 返回设置的暂停时间
+    Q_INVOKABLE QString pauseCountdown();          // 以00：00：00形式返回暂停
 
 signals:
     void videoSinkChanged();
@@ -102,6 +106,12 @@ signals:
     void videoAspectRatioChanged();  // 视频宽高比变化
     void playbackModeChanged();      // 播放模式改变
     void playbackFinishedChanged();  // 视频是否结束改变
+    void localChanged();
+    void pauseTimeRemainingChanged(); // 暂停倒计时改变
+    void timedPauseFinished();        // 定时暂停结束信号
+
+private slots:
+    void updatePauseTimeRemaining(); // 暂停倒计时减小
 
 private:
     void parseLrcFile(const QString &filePath);
@@ -119,10 +129,12 @@ private:
     bool m_userMutedSubtitle;
     PlaybackMode m_playbackMode; // 视频播放模式
     bool m_playbackFinished;     // 视频是否结束
+    bool m_islocal;
 
     QMediaPlayer *m_thumbnailPlayer; // 缩略图专用播放器
     QVideoSink *m_thumbnailSink;     // 缩略图专用视频接收器
     QTimer *m_timedPause;            // 定时暂停计时器
-    int m_pauseTime{0};              // 暂停时间
+    int m_pauseTime{0};              // 暂停时间，单位为分
     QTimer *m_pauseCountdown;        // 暂停倒计时器
+    int m_pauseTimeRemaining{0};     // 暂停倒计时,单位为秒
 };

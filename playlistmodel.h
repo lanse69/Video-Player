@@ -47,6 +47,8 @@ public:
     Q_INVOKABLE int indexByUrl(QUrl url);         //通过url寻找对应的下标
     Q_INVOKABLE int getRandomIndex(int min, int max) const; // 生成随机下标
 
+    Q_INVOKABLE QString generateFilePath() const;
+
     //暴露属性的setter和getter
     int currentIndex() const;
     void setCurrentIndex(int index);

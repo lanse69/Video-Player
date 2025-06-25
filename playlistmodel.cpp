@@ -3,6 +3,8 @@
 #include <QFileInfo>
 #include <QFile>
 #include <QRandomGenerator>
+#include <QStandardPaths>
+#include <QDir>
 
 PlaylistModel::PlaylistModel(QObject *parent) : QAbstractListModel(parent), m_currentIndex{-1}
 {
@@ -150,26 +152,32 @@ QList<QUrl> PlaylistModel::search(
 
 void PlaylistModel::histroy()
 {
-    QFile file("histroy.txt");
+    QFile file(generateFilePath());
     QList<QUrl> readFile;
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&file);
         while (!in.atEnd()) {
             QString line = in.readLine().trimmed();
-            if (QFile::exists(QUrl(line).toLocalFile()))
-                readFile.append(QUrl(line));
+            QUrl url(line);
+
+            // 检查 URL 类型
+            if (url.isLocalFile()) {
+                // 本地文件：检查文件是否存在
+                if (QFile::exists(url.toLocalFile())) { readFile.append(url); }
+            } else {
+                // 网络 URL：直接添加
+                readFile.append(url);
+            }
         }
         file.close();
-    } else {
-        qDebug() << "histroyread failed";
     }
-    addMedias(readFile);
+    if (!readFile.empty()) addMedias(readFile);
 }
 
 void PlaylistModel::setHistroy(QUrl url)
 {
     //读入数据
-    QFile file("histroy.txt");
+    QFile file(generateFilePath());
     QList<QUrl> readFile;
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&file);
@@ -252,6 +260,20 @@ bool PlaylistModel::isMatch(
     return false;
 }
 
+QString PlaylistModel::generateFilePath() const
+{
+    // 生成历史记录文件路径
+    QString dirPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    if (dirPath.isEmpty()) { dirPath = QDir::currentPath(); }
+    dirPath = QDir::cleanPath(dirPath);
+    if (!dirPath.endsWith(QDir::separator())) { dirPath += QDir::separator(); }
+    dirPath += "Video-Player_History";
+    QDir dir(dirPath);
+    if (!dir.exists()) { dir.mkpath("."); }
+    QString filePath = dir.filePath("history.txt");
+    return filePath;
+}
+
 int PlaylistModel::currentIndex() const
 {
     return m_currentIndex;
@@ -273,39 +295,47 @@ void PlaylistModel::setCurrentIndex(int index)
 
 QString PlaylistModel::getTitleByFF(QUrl url) const
 {
-    QString localPath = url.toLocalFile(); // 获取本地文件路径
-    if (localPath.isEmpty()) return "";
+    if (url.isLocalFile()) {
+        QString localPath = url.toLocalFile(); // 获取本地文件路径
+        if (localPath.isEmpty()) return "";
 
-    QByteArray utf8 = localPath.toUtf8();
-    const char *fileName = utf8.constData();
-    AVFormatContext *fmt_ctx = NULL;
-    QString ans{};
+        QByteArray utf8 = localPath.toUtf8();
+        const char *fileName = utf8.constData();
+        AVFormatContext *fmt_ctx = NULL;
+        QString ans{};
 
-    // 打开媒体文件
-    if (avformat_open_input(&fmt_ctx, fileName, NULL, NULL) < 0) {
-        av_log(NULL, AV_LOG_ERROR, "avformat_open_input failed\n");
-        return ans;
-    }
+        // 打开媒体文件
+        if (avformat_open_input(&fmt_ctx, fileName, NULL, NULL) < 0) {
+            av_log(NULL, AV_LOG_ERROR, "avformat_open_input failed\n");
+            return ans;
+        }
 
-    // 获取流信息
-    if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
-        av_log(NULL, AV_LOG_ERROR, "avformat_find_stream_info failed\n");
+        // 获取流信息
+        if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
+            av_log(NULL, AV_LOG_ERROR, "avformat_find_stream_info failed\n");
+            avformat_close_input(&fmt_ctx);
+            return ans;
+        }
+
+        // 获取标题元数据
+        AVDictionaryEntry *tag = av_dict_get(fmt_ctx->metadata, "title", NULL, 0);
+        if (tag && tag->value) {
+            ans = QString::fromUtf8(tag->value); // 正确处理UTF-8编码
+        } else {
+            // 使用文件名作为标题
+            QFileInfo fileInfo(localPath);
+            ans = fileInfo.fileName();
+        }
+
         avformat_close_input(&fmt_ctx);
         return ans;
-    }
-
-    // 获取标题元数据
-    AVDictionaryEntry *tag = av_dict_get(fmt_ctx->metadata, "title", NULL, 0);
-    if (tag && tag->value) {
-        ans = QString::fromUtf8(tag->value); // 正确处理UTF-8编码
     } else {
-        // 使用文件名作为标题
-        QFileInfo fileInfo(localPath);
-        ans = fileInfo.fileName();
+        // 网络URL - 使用URL的文件名部分
+        QString path = url.path();
+        int lastSlash = path.lastIndexOf('/');
+        if (lastSlash != -1) { return path.mid(lastSlash + 1); }
+        return url.toString();
     }
-
-    avformat_close_input(&fmt_ctx);
-    return ans;
 }
 
 int PlaylistModel::getRandomIndex(int min, int max) const

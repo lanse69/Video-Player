@@ -3,6 +3,8 @@ import QtQuick.Controls
 
 Item {
     property alias open: _open
+    property alias openUrl: _openUrl
+    property alias download: _download
     property alias close: _close
     property alias exit: _exit
     property alias play: _play
@@ -12,7 +14,7 @@ Item {
     property alias subtitle: _subtitle
     property alias previous: _previous
     property alias next: _next
-    property alias aboutQt: _aboutQt
+    property alias about: _about
     property alias zeroPointFiveRate: _zeroPointFiveRate
     property alias oneRate: _oneRate
     property alias onePointFiveRate: _onePointFiveRate
@@ -42,12 +44,25 @@ Item {
     property alias bigDanmu: _bigDanmu
     property alias smallDanmu:_smallDanmu
     property alias timedPause: _timedPause
+    property alias attention: _attention
 
     Action {
         id: _open
         text: qsTr("&Open...")
         icon.name: "document-open"
         shortcut: StandardKey.Open
+    }
+
+    Action {
+        id: _openUrl
+        text: qsTr("Open &URL...")
+        icon.name: "applications-network"
+    }
+
+    Action {
+        id: _download
+        text: qsTr("Download")
+        icon.name: "folder-download"
     }
 
     Action {
@@ -109,9 +124,9 @@ Item {
     }
 
     Action {
-        id: _aboutQt
-        text: qsTr("About Qt")
-        icon.name: "qtcreator"
+        id: _about
+        text: qsTr("About")
+        icon.name: "help-about"
     }
 
     Action {
@@ -180,6 +195,12 @@ Item {
         text: qsTr("Save Location")
         icon.name: "folder-black"
         shortcut: "Ctrl+L"
+    }
+
+    Action {
+        id: _attention
+        text: qsTr("Attention")
+        icon.name: "help-about"
     }
 
     Action {
@@ -272,17 +293,21 @@ Item {
     Action {
         id: _smallWindowMode
         text: qsTr("small Window")
+        icon.name: "preferences-system-windows-actions"
     }
+
     Action{
         id:_bigDanmu
         text: "大"
     }
+
     Action{
         id:_smallDanmu
         text:"小"
     }
+
     Action {
          id: _timedPause
-         text: "Timed Pause"
+         text: mediaEngine.pauseTimeRemaining ? mediaEngine.pauseCountdown() : "Timed Pause"
      }
 }

@@ -1,8 +1,11 @@
 #include "danmumanager.h"
+
 #include <QFile>
 #include <QFont>
 #include <QFontMetrics>
 #include <algorithm>
+#include <QStandardPaths>
+
 DanmuManager::DanmuManager(QObject *parent) : QObject{parent}, m_speed{0.1}
 {
     _font = new Font{};
@@ -15,12 +18,11 @@ void DanmuManager::initDanmus(
     m_danmus.clear();
     m_title = title;
 
+    QString filePath = generateFilePath().filePath(m_title + "danmu.txt");
+
     //从文件读入弹幕
-    QFile file(m_title + "danmu.txt");
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug() << m_title + "Danmu init failed";
-        return;
-    }
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) { return; }
     QTextStream in(&file);
     while (!in.atEnd()) {
         qint64 startTime = 0;
@@ -31,10 +33,7 @@ void DanmuManager::initDanmus(
         //读入每行的开始时间和内容
         bool ok;
         startTime = line.section(" ", 0, 0).toLongLong(&ok);
-        if (!ok) {
-            qDebug() << m_title + "danmu read failed";
-            continue;
-        }
+        if (!ok) { continue; }
         content = line.section(" ", 1, 1);
         m_danmus.append(Danmu{startTime, content});
     }
@@ -75,14 +74,15 @@ void DanmuManager::addDanmu(
 
 void DanmuManager::saveDanmu()
 {
-    QFile file(m_title + "danmu.txt");
+    QString filePath = generateFilePath().filePath(m_title + "danmu.txt");
+
+    QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
         qDebug() << m_title + "danmu save failed";
     }
     QTextStream out(&file);
     for (Danmu &i : m_danmus) {
         out << QString::number(i.m_sendTime) << " " << i.m_content << "\n";
-        qDebug() << QString::number(i.m_sendTime) << " " << i.m_content;
     }
     file.close();
 }
@@ -147,6 +147,24 @@ QList<QList<QVariant>> DanmuManager::danmus(
     }
 
     return ans;
+}
+
+QDir DanmuManager::generateFilePath() const
+{
+    // 生成弹幕文件路径
+    QString dirPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    if (dirPath.isEmpty()) { dirPath = QDir::currentPath(); }
+    dirPath = QDir::cleanPath(dirPath);
+    if (!dirPath.endsWith(QDir::separator())) { dirPath += QDir::separator(); }
+    dirPath += "Video-Player_Danmu";
+    QDir dir(dirPath);
+    if (!dir.exists()) { dir.mkpath("."); }
+    return dir;
+}
+
+QString DanmuManager::danmuDirPath() const
+{
+    return generateFilePath().absolutePath();
 }
 
 int DanmuManager::speed()

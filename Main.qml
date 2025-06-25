@@ -457,6 +457,12 @@ ApplicationWindow {
         function onTimedPauseFinished() { // 连接定时暂停结束信号
             content.dialogs.timedPauseFinishedDialog.open();
         }
+
+        function onVideoPause() { // 连接视频暂停信号
+            content.dialogs.videoPauseDialog.open();
+            content.dialogs.videoPauseDialog.x = window.width / 2
+            content.dialogs.videoPauseDialog.y = window.height / 2
+        }
     }
 
     function closeVideo() {

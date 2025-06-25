@@ -89,7 +89,6 @@ public:
     Q_INVOKABLE void setPlaybackMode(PlaybackMode mode); // 设置视频播放模式
     Q_INVOKABLE void setPlaybackFinished(bool finished); // 设置视频是否结束属性
     Q_INVOKABLE QString getFrameAtPosition(qint64 position); // 返回相应位置的视频帧
-
     Q_INVOKABLE void timedPauseStart(int minutes); // 定时暂停开始
     Q_INVOKABLE int pauseTime();                   // 返回设置的暂停时间
     Q_INVOKABLE QString pauseCountdown();          // 以00：00：00形式返回暂停
@@ -117,6 +116,7 @@ signals:
     void timedPauseFinished();        // 定时暂停结束信号
     void coverImageChanged();         // 封面图片变化信号
     void hasVideoChanged();           // 视频流状态变化信号
+    void videoPause();                // 视频暂停信号
 
 private slots:
     void updatePauseTimeRemaining(); // 暂停倒计时减小
@@ -144,7 +144,7 @@ private:
     QMediaPlayer *m_thumbnailPlayer; // 缩略图专用播放器
     QVideoSink *m_thumbnailSink;     // 缩略图专用视频接收器
     QTimer *m_timedPause;            // 定时暂停计时器
-    int m_pauseTime{0};              // 暂停时间，单位为分
+    int m_pauseTime;                 // 暂停时间，单位为分
     QTimer *m_pauseCountdown;        // 暂停倒计时器
-    int m_pauseTimeRemaining{0};     // 暂停倒计时,单位为秒
+    int m_pauseTimeRemaining;        // 暂停倒计时,单位为秒
 };

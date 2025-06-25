@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
 import VideoPlayer
-// import "DanmuRender.js" as DanmuRender
 
 Item {
     property MediaEngine mediaEngine
@@ -313,7 +312,7 @@ Item {
                 }
             }
 
-            HoverHandler { // 鼠标悬停显示控制条
+            HoverHandler { // 鼠标悬停显示控制栏
                 acceptedDevices: PointerDevice.Mouse
                 onHoveredChanged: {
                     smallControlBar.visible = hovered ? true : false

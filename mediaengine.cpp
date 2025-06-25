@@ -27,6 +27,8 @@ MediaEngine::MediaEngine(QObject *parent)
     , m_islocal(true)
     , m_coverArtBase64{""}
     , m_hasVideo(false)
+    , m_pauseTime{0}
+    , m_pauseTimeRemaining{0}
 {
     m_player = new QMediaPlayer(this);
     m_audioOutput = new QAudioOutput(this);
@@ -37,7 +39,7 @@ MediaEngine::MediaEngine(QObject *parent)
     m_thumbnailPlayer = new QMediaPlayer(this);
     m_thumbnailSink = new QVideoSink(this);
     m_thumbnailPlayer->setVideoOutput(m_thumbnailSink);
-    m_thumbnailPlayer->setAudioOutput(nullptr); // 禁用音频输出
+    m_thumbnailPlayer->setAudioOutput(nullptr); // 禁用缩略图播放器的音频输出
 
     m_timedPause = new QTimer(this);
     m_pauseCountdown = new QTimer(this);
@@ -76,9 +78,11 @@ MediaEngine::MediaEngine(QObject *parent)
     // 到设定的时间暂停
     connect(m_timedPause, &QTimer::timeout, this, [this]() {
         pause();
+        m_timedPause->stop();
         m_pauseTimeRemaining = 0;
         m_pauseTime = 0;
-        emit timedPauseFinished(); // 结束信号
+        emit pauseTimeRemainingChanged();
+        emit timedPauseFinished(); // 定时暂停倒计时结束信号
     });
 
     // 暂停倒计时每秒减一
@@ -167,6 +171,7 @@ void MediaEngine::play()
 void MediaEngine::pause()
 {
     m_player->pause();
+    emit videoPause();
 }
 
 void MediaEngine::stop()
@@ -509,19 +514,19 @@ void MediaEngine::setPlaybackFinished(bool finished)
 QString MediaEngine::getFrameAtPosition(qint64 position)
 {
     if (!m_player->hasVideo()) return ""; // 检查是否有视频流
+    if (!isLocal()) return "";            // 检查是否是本地视频
 
     // 设置缩略图播放器的源
     m_thumbnailPlayer->setSource(m_player->source());
 
-    // 连接信号以等待帧可用
     QEventLoop loop;
     QTimer::singleShot(100, &loop, &QEventLoop::quit); // 超时保护，防止等待帧的时间过长而导致界面卡死
-    QObject::connect(m_thumbnailSink, &QVideoSink::videoFrameChanged, &loop, &QEventLoop::quit);
+    QObject::connect(m_thumbnailSink, &QVideoSink::videoFrameChanged, &loop, &QEventLoop::quit); // 连接信号以等待帧可用
     m_thumbnailPlayer->setPosition(position);
     m_thumbnailPlayer->play();
     loop.exec(QEventLoop::ExcludeUserInputEvents); // 非阻塞式等待
     QObject::disconnect(m_thumbnailSink, &QVideoSink::videoFrameChanged, &loop, &QEventLoop::quit);
-    QVideoFrame frame = m_thumbnailSink->videoFrame();
+    QVideoFrame frame = m_thumbnailSink->videoFrame(); // 读取当前帧
     m_thumbnailPlayer->pause();
 
     if (!frame.isValid()) {
@@ -547,7 +552,7 @@ QString MediaEngine::getFrameAtPosition(qint64 position)
     QBuffer buffer(&byteArray);
     buffer.open(QIODevice::WriteOnly);
     if (!image.save(&buffer, "JPEG")) {
-        m_thumbnailPlayer->pause();
+        m_thumbnailPlayer->setSource(QUrl());
         return "";
     }
 
@@ -661,6 +666,7 @@ void MediaEngine::updatePauseTimeRemaining()
 {
     if (m_pauseTimeRemaining == 0) {
         m_pauseCountdown->stop();
+        m_timedPause->stop();
     } else {
         --m_pauseTimeRemaining;
         emit pauseTimeRemainingChanged();

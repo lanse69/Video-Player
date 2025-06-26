@@ -260,12 +260,50 @@ Rectangle {
                 }
             }
 
-            //弹幕开关
-            ToolButton{
-                id:danmuSwitch
-                icon.name:"view-time-schedule-baselined"
-                onClicked: {
-                    danmInpustFrame.visible = danmInpustFrame.visible ? false : true
+            //弹幕输入框
+            Frame{
+                id: danmInpustFrame
+                enabled: mediaEngine.currentMedia.toString() !== "" && captureManager.playerLayout !== CaptureManager.NotVideo && !actions.danmuSwitch.checked
+                Layout.preferredHeight: parent.height
+                Layout.preferredWidth: danmuInputBox.width
+                TextArea{
+                    id:danmuInputBox
+                    anchors.centerIn: parent
+                    readOnly: !enabled
+                    placeholderText: {
+                        if (mediaEngine.currentMedia.toString() === "") {
+                            "未打开音视频文件"
+                        } else if (captureManager.playerLayout === CaptureManager.NotVideo) {
+                            "该布局模式下无法发送弹幕"
+                        } else if (actions.danmuSwitch.checked) {
+                            "弹幕已关闭"
+                        } else {
+                            "请输入弹幕内容(限100字)"
+                        }
+                    }
+                    color: "white"
+                    placeholderTextColor: "white"
+                    Keys.onPressed: function(event) {
+                        if (!enabled) {
+                            event.accepted = true;
+                            return;
+                        }
+
+                        //输入回车键提交弹幕
+                        if(event.key===Qt.Key_Enter||event.key===Qt.Key_Return){
+                            content.danmuManager.addDanmu(content.mediaEngine.position,danmuInputBox.text)
+                            danmuInputBox.text=""
+                        }
+
+                        //确保输入合法
+                        if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                            event.accepted=true
+                        }
+                        //确保输入内容的大小
+                        if(length>=100&&event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
+                            event.accepted=true
+                        }
+                    }
                 }
             }
 
@@ -400,51 +438,6 @@ Rectangle {
                 ToolButton {
                     icon.name: "media-playback-stop"
                     onClicked: captureManager.stopCameraRecording()
-                }
-            }
-        }
-    }
-
-    //弹幕输入框
-    Frame{
-        id: danmInpustFrame
-        anchors.bottom: parent.top
-        anchors.left: parent.left
-        visible: false
-        enabled: mediaEngine.currentMedia.toString() !== "" && captureManager.playerLayout !== CaptureManager.NotVideo
-        TextArea{
-            id:danmuInputBox
-            readOnly: !enabled
-            placeholderText: {
-                if (mediaEngine.currentMedia.toString() === "") {
-                    "未打开音视频文件"
-                } else if (captureManager.playerLayout === CaptureManager.NotVideo) {
-                    "该布局模式下无法发送弹幕"
-                } else {
-                    "请输入弹幕内容(限100字)"
-                }
-            }
-            placeholderTextColor: "white"
-            Keys.onPressed: function(event) {
-                if (!enabled) {
-                    event.accepted = true;
-                    return;
-                }
-
-                //输入回车键提交弹幕
-                if(event.key===Qt.Key_Enter||event.key===Qt.Key_Return){
-                    content.danmuManager.addDanmu(content.mediaEngine.position,danmuInputBox.text)
-                    danmuInputBox.text=""
-                    danmInpustFrame.visible=false
-                }
-
-                //确保输入合法
-                if(!/[a-zA-Z0-9]/.test(event.text) && event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
-                    event.accepted=true
-                }
-                //确保输入内容的大小
-                if(length>=100&&event.key !== Qt.Key_Delete&&event.key !== Qt.Key_Backspace){
-                    event.accepted=true
                 }
             }
         }

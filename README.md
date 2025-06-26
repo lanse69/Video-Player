@@ -23,7 +23,6 @@
 ```bash
 # 下载 Qt 在线安装器
 wget https://download.qt.io/official_releases/online_installers/qt-unified-linux-x64-online.run
-
 chmod +x qt-unified-linux-x64-online.run
 
 # 运行安装器（选择安装 Qt 6.9.1）
@@ -52,20 +51,16 @@ sudo pacman -S qt6-base qt6-multimedia qt6-quick ffmpeg
 ### 步骤 2：编译项目
 ```bash
 git clone https://github.com/lanse69/Video-Player.git
-
 cd video-player
 
 # 如果使用自定义安装的 Qt 6.9.1 (根据实际路径修改)
 export PATH="/opt/Qt/6.9.1/gcc_64/bin:$PATH"
-
 export LD_LIBRARY_PATH="/opt/Qt/6.9.1/gcc_64/lib:$LD_LIBRARY_PATH"
 # ```
 
 
 mkdir build && cd build
-
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
-
 make -j$(nproc)
 ```
 
@@ -79,6 +74,5 @@ sudo make install
 ### 步骤 4：更新桌面数据库
 ```bash
 sudo update-desktop-database
-
 sudo gtk-update-icon-cache /usr/share/icons/hicolor
 ```

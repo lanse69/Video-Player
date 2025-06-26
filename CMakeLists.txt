@@ -94,6 +94,11 @@ target_link_libraries(appVideo-Player
 )
 
 # 安装应用程序图标
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player.svg
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps
+        RENAME video-player.svg
+)
+
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player-16.png
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/16x16/apps
         RENAME video-player.png

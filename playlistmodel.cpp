@@ -58,8 +58,7 @@ void PlaylistModel::addMedia(const QUrl &url)
     endInsertRows(); //通知视图数据插入结束了
 }
 
-void PlaylistModel::addMedias(
-    const QList<QUrl> &urls)
+void PlaylistModel::addMedias(const QList<QUrl> &urls)
 {
     if (urls.isEmpty()) return;
 
@@ -215,15 +214,13 @@ void PlaylistModel::setHistroy(QUrl url)
     addMedias(readFile); //重新读取列表
 }
 
-int PlaylistModel::indexByUrl(
-    QUrl url)
+int PlaylistModel::indexByUrl(QUrl url)
 {
     for (int i = 0; i < m_mediaList.size(); i++) {
         if (m_mediaList[i].url == url) {
             return i;
         }
     }
-    qDebug() << "indexByUrl failed";
     return -1;
 }
 

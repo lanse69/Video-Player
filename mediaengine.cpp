@@ -186,11 +186,6 @@ void MediaEngine::setPosition(qint64 position)
 
 void MediaEngine::setMedia(const QUrl &url)
 {
-    if (url.isEmpty()) return;
-
-    bool wasLocal = m_islocal;
-    m_islocal = url.isLocalFile();
-
     m_subtitles.clear();
     m_hasSubtitle = false;
     m_subtitleText = "";
@@ -198,6 +193,14 @@ void MediaEngine::setMedia(const QUrl &url)
     emit coverImageChanged();
     emit hasSubtitleChanged();
     emit subtitleTextChanged();
+
+    m_player->setSource(url);
+    emit currentMediaChanged();
+
+    if (url.isEmpty()) return;
+
+    bool wasLocal = m_islocal;
+    m_islocal = url.isLocalFile();
 
     // 检查URL类型
     if (url.isLocalFile()) {
@@ -209,9 +212,6 @@ void MediaEngine::setMedia(const QUrl &url)
     }
 
     if (url.isLocalFile() != wasLocal) emit localChanged();
-
-    m_player->setSource(url);
-    emit currentMediaChanged();
 
     emit subtitleVisibleChanged();
 }

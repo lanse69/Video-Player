@@ -422,6 +422,7 @@ ApplicationWindow {
         playlistModel.clear()
         title = "Video Player"
         content.folderListModel.folder = ""
+        mediaEngine.setMedia("")
     }
 
     // 让菜单栏收回截图按键，保证截图时截图按键不挡住窗口画面

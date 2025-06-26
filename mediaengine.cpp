@@ -26,7 +26,6 @@ MediaEngine::MediaEngine(QObject *parent)
     , m_thumbnailSink{nullptr}
     , m_islocal(true)
     , m_coverArtBase64{""}
-    , m_hasVideo(false)
     , m_pauseTime{0}
     , m_pauseTimeRemaining{0}
 {
@@ -50,12 +49,6 @@ MediaEngine::MediaEngine(QObject *parent)
     connect(m_player, &QMediaPlayer::durationChanged, this, &MediaEngine::durationChanged);
     connect(m_player, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
         emit mediaStatusChanged(static_cast<int>(status));
-    });
-    connect(m_player, &QMediaPlayer::hasVideoChanged, this, [this]() {
-        if (m_hasVideo != m_player->hasVideo()) {
-            m_hasVideo = m_player->hasVideo();
-            emit hasVideoChanged();
-        }
     });
     connect(m_player, &QMediaPlayer::errorOccurred, this, [this](QMediaPlayer::Error error, const QString &errorString) {
         emit errorOccurred(static_cast<int>(error), errorString);
@@ -126,11 +119,6 @@ qreal MediaEngine::volume() const
 bool MediaEngine::isMuted() const
 {
     return m_muted;
-}
-
-bool MediaEngine::hasVideo() const
-{
-    return m_hasVideo;
 }
 
 void MediaEngine::setVolume(qreal volume)

@@ -39,7 +39,6 @@ class MediaEngine : public QObject
     Q_PROPERTY(bool isLocal READ isLocal NOTIFY localChanged)
     Q_PROPERTY(int pauseTimeRemaining READ pauseTimeRemaining NOTIFY pauseTimeRemainingChanged) // 定时暂停倒计时
     Q_PROPERTY(QString coverArtBase64 READ coverArtBase64 NOTIFY coverImageChanged)             // 封面图片的base64数据
-    Q_PROPERTY(bool hasVideo READ hasVideo NOTIFY hasVideoChanged)                              // 是否有视频流
 
 public:
     explicit MediaEngine(QObject *parent = nullptr);
@@ -51,7 +50,6 @@ public:
     };
     Q_ENUM(PlaybackMode)
 
-    bool hasVideo() const; // 获取是否有视频流
     QVideoSink *videoSink() const;
     bool isPlaying() const;
     qint64 position() const;
@@ -115,7 +113,6 @@ signals:
     void pauseTimeRemainingChanged(); // 暂停倒计时改变
     void timedPauseFinished();        // 定时暂停结束信号
     void coverImageChanged();         // 封面图片变化信号
-    void hasVideoChanged();           // 视频流状态变化信号
     void videoPause();                // 视频暂停信号
 
 private slots:
@@ -125,7 +122,6 @@ private:
     void parseLrcFile(const QString &filePath);
     void parseSrtFile(const QString &filePath);
 
-    bool m_hasVideo; // 是否有视频流
     QMediaPlayer *m_player;
     QAudioOutput *m_audioOutput;
     QVideoSink *m_videoSink;

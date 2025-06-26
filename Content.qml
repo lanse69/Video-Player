@@ -173,7 +173,8 @@ Item {
         visible: false
         height: 30
         placeholderText: "请输入搜索内容(限10字)"
-        placeholderTextColor: "gray"
+        placeholderTextColor: "white"
+        color: "white"
         focus: true
 
         Keys.onPressed: function (event){

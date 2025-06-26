@@ -252,20 +252,20 @@ Rectangle {
                 }
             }
 
+            ToolButton {
+                icon.name: "folder-download"
+                visible: mediaEngine && !mediaEngine.isLocal && mediaEngine.currentMedia.toString() !== ""
+                onClicked: {
+                    content.downloadManager.nowDownload();
+                }
+            }
+
             //弹幕开关
             ToolButton{
                 id:danmuSwitch
                 icon.name:"view-time-schedule-baselined"
                 onClicked: {
                     danmInpustFrame.visible = danmInpustFrame.visible ? false : true
-                }
-            }
-
-            ToolButton {
-                icon.name: "folder-download"
-                visible: mediaEngine && !mediaEngine.isLocal && mediaEngine.currentMedia.toString() !== ""
-                onClicked: {
-                    content.downloadManager.nowDownload();
                 }
             }
 
@@ -411,15 +411,22 @@ Rectangle {
         anchors.bottom: parent.top
         anchors.left: parent.left
         visible: false
-        enabled: captureManager.playerLayout !== CaptureManager.NotVideo
+        enabled: mediaEngine.currentMedia.toString() !== "" && captureManager.playerLayout !== CaptureManager.NotVideo
         TextArea{
             id:danmuInputBox
-            readOnly: !mediaEngine.hasVideo || captureManager.playerLayout === CaptureManager.NotVideo  //当视频没有播放时不能输入弹幕
-            placeholderText: captureManager.playerLayout === CaptureManager.NotVideo ?
-                                 "该布局模式下无法发送弹幕" : mediaEngine.hasVideo ? "请输入弹幕内容(限100字)" : "未打开音视频文件"
-            placeholderTextColor: "gray"
+            readOnly: !enabled
+            placeholderText: {
+                if (mediaEngine.currentMedia.toString() === "") {
+                    "未打开音视频文件"
+                } else if (captureManager.playerLayout === CaptureManager.NotVideo) {
+                    "该布局模式下无法发送弹幕"
+                } else {
+                    "请输入弹幕内容(限100字)"
+                }
+            }
+            placeholderTextColor: "white"
             Keys.onPressed: function(event) {
-                if (captureManager.playerLayout === CaptureManager.NotVideo) {
+                if (!enabled) {
                     event.accepted = true;
                     return;
                 }

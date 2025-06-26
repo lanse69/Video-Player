@@ -103,9 +103,9 @@ Item {
         text: qsTr("This is a video player.")
         informativeText: qsTr("This application uses Qt version 6.9.1")
         detailedText: "Copyright©2025
-                    \nLan yin yin(lan_yinyin@qq.com)
-                    \nZhou jun(zhoujun1108@126.com)
-                    \nZhu Can Yin(2892825621@qq.com)"
+                    \nLan Yinyin(lan_yinyin@qq.com)
+                    \nZhou Jun(zhoujun1108@126.com)
+                    \nZhu Canyin(2892825621@qq.com)"
     }
 
     Dialog {
@@ -630,7 +630,7 @@ Item {
     }
 
     Timer {
-        interval: 1000
+        interval: 500
         running: _videoPauseDialog.opened
         onTriggered: _videoPauseDialog.close()
     }

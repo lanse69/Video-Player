@@ -434,7 +434,7 @@ ApplicationWindow {
     Timer {
         id: screenshotTimer
         property int type
-        interval: 50 // 等待50毫秒确保UI更新
+        interval: 600 // 确保UI更新
         onTriggered: {
             if (type === CaptureManager.WindowCapture) {
                 captureManager.captureScreenshot(CaptureManager.WindowCapture)

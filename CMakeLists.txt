@@ -93,10 +93,72 @@ target_link_libraries(appVideo-Player
     ${AVFILTER_LIBRARIES}
 )
 
+# 安装应用程序图标
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player-16.png
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/16x16/apps
+        RENAME video-player.png
+)
 
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player-22.png
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/22x22/apps
+        RENAME video-player.png
+)
 
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player-32.png
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/32x32/apps
+        RENAME video-player.png
+)
 
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player-44.png
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/44x44/apps
+        RENAME video-player.png
+)
 
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player-48.png
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/48x48/apps
+        RENAME video-player.png
+)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player-64.png
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64/apps
+        RENAME video-player.png
+)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player-128.png
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/128x128/apps
+        RENAME video-player.png
+)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player-150.png
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/150x150/apps
+        RENAME video-player.png
+)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player-256.png
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/256x256/apps
+        RENAME video-player.png
+)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player-310.png
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/310x310/apps
+        RENAME video-player.png
+)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/video-player-512.png
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/512x512/apps
+        RENAME video-player.png
+)
+
+# 安装启动脚本
+install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/scripts/video-player.sh
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        RENAME video-player.sh
+)
+
+# 安装桌面启动文件
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/assets/video-player.desktop
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications
+)
 
 
 

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Video Player
+Exec=video-player.sh
+Icon=video-player.png
+Type=Application
+Categories=AudioVideo;Player;
+Comment=基于C++与Qt QML混合编程的视频播放器
+TryExec=video-player.sh

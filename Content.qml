@@ -23,6 +23,7 @@ Item {
 
     // 双击全屏
     TapHandler {
+        exclusiveSignals: TapHandler.DoubleTap | TapHandler.SingleTap
         onDoubleTapped: {
             if (window.visibility === ApplicationWindow.FullScreen) {
                 window.showNormal()
@@ -33,7 +34,7 @@ Item {
             }
         }
 
-        onTapped: { // 单击暂停播放或开始播放
+        onSingleTapped: { // 单击暂停播放或开始播放
             mediaEngine.playing ? mediaEngine.pause() : mediaEngine.play()
         }
     }

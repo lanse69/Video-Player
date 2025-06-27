@@ -44,7 +44,7 @@ chmod +x qt-unified-linux-x64-online.run
    - libavfilter
 
 ### 系统环境要求
-- **Linux 系统**（推荐 Manjaro/Arch）
+- **Linux 系统**（推荐 Manjaro/Arch X11桌面）
 
 ---
 
@@ -91,14 +91,17 @@ sudo gtk-update-icon-cache /usr/share/icons/hicolor
 !!!关于：项目根目录的scripts/video-player.sh文件
 
 如果需要使用自己安装的Qt,请修改第二条命令且取消注释
+
 修改后进入build目录再次安装到系统!!!
 
-NVIDIA 专有驱动与 FFmpeg 后端存在兼容性问题，遂可尝试使用GStreamer后端（可能会找不到一些库导致无法播放）, 所以更推荐更换驱动
+使用wayland桌面会导致控制栏与列表无法出现的问题
 
+NVIDIA 专有驱动与 FFmpeg 后端存在兼容性问题，遂可尝试使用GStreamer后端（可能会找不到一些库导致无法播放）, 所以更推荐切换到混显或者集显亦或者更换驱动
 ```bash
 # GStreamer
 sudo pacman -S gstreamer gst-libav gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly
 sudo pacman -S qt6-multimedia-gstreamer
 ```
 如果编译后运行进程直接崩溃，则根据前面安装GStreamer，在取消项目根目录的scripts/video-player.sh文件中第三条命名注释
+
 修改后进入build目录再次安装到系统!!!

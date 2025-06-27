@@ -12,6 +12,11 @@
 #include <QEventLoop>
 #include <QTimer>
 
+extern "C" {
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+}
+
 MediaEngine::MediaEngine(QObject *parent)
     : QObject(parent)
     , m_videoSink{nullptr}

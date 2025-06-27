@@ -8,7 +8,6 @@
 #include <QVideoSink>
 #include <QMap>
 #include <QPair>
-#include <playlistmodel.h>
 
 class MediaEngine : public QObject
 {

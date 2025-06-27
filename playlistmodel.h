@@ -1,9 +1,9 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QQmlEngine>
 #include <QList>
 #include <QUrl>
-#include <qqmlintegration.h>
 
 extern "C" {
 #include <libavformat/avformat.h>

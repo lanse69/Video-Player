@@ -61,21 +61,24 @@ sudo pacman -S qt6-tools qt6-shadertools
 git clone https://github.com/lanse69/Video-Player.git
 cd video-player
 
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
+
+# 如果提示版本过低，请自行参考前面下载Qt 6.9+的版本
 # 如果使用自定义安装的 Qt 6.9.1 (根据实际路径修改)
 export PATH="/opt/Qt/6.9.1/gcc_64/bin:$PATH"
 export LD_LIBRARY_PATH="/opt/Qt/6.9.1/gcc_64/lib:$LD_LIBRARY_PATH"
 # ```
 
-
-mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
 make -j$(nproc)
 ```
 
 ### 步骤 3：安装到系统
-请务必先前往项目根目录的scripts下的video-player.sh文件中决定是否修改或者注释第二条(第五行)，再安装!!!
+
+!!!请务必先前往项目根目录的scripts/video-player.sh文件中决定是否修改或者注释或者解除注释，再安装!!!
 
 ```bash
+# 如果是使用自己安装的Qt, 请先看后面的Attention
 sudo make install
 ```
 
@@ -84,3 +87,18 @@ sudo make install
 sudo update-desktop-database
 sudo gtk-update-icon-cache /usr/share/icons/hicolor
 ```
+## Attention
+!!!关于：项目根目录的scripts/video-player.sh文件
+
+如果需要使用自己安装的Qt,请修改第二条命令且取消注释
+修改后进入build目录再次安装到系统!!!
+
+NVIDIA 专有驱动与 FFmpeg 后端存在兼容性问题，遂可尝试使用GStreamer后端（可能会找不到一些库导致无法播放）, 所以更推荐更换驱动
+
+```bash
+# GStreamer
+sudo pacman -S gstreamer gst-libav gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly
+sudo pacman -S qt6-multimedia-gstreamer
+```
+如果编译后运行进程直接崩溃，则根据前面安装GStreamer，在取消项目根目录的scripts/video-player.sh文件中第三条命名注释
+修改后进入build目录再次安装到系统!!!

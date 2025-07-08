@@ -269,8 +269,23 @@ QString PlaylistModel::generateFilePath() const
     dirPath += "Video-Player_History";
     QDir dir(dirPath);
     if (!dir.exists()) { dir.mkpath("."); }
-    QString filePath = dir.filePath("history.txt");
-    return filePath;
+    return dir.filePath("history.txt");
+}
+
+void PlaylistModel::clearHistory() {
+    // 清除内存中的历史记录
+    beginResetModel();
+    m_mediaList.clear();
+    endResetModel();
+    emit rowCountChanged();
+    setCurrentIndex(-1);
+
+    // 删除历史记录文件
+    QString filePath = generateFilePath();
+    QFile file(filePath);
+    if (file.exists()) {
+        file.remove();
+    }
 }
 
 int PlaylistModel::currentIndex() const

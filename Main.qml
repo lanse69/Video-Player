@@ -123,12 +123,14 @@ ApplicationWindow {
             MenuSeparator {}
             Menu{
                 title: qsTr("Recently Opened")
+                MenuItem { action: actions.clearHistory }
+                MenuSeparator {}
                 Repeater{
-                    model:histroyListModel
-                    delegate:MenuItem{
-                        action:Action {
-                            id:_histroy
-                            property string url:model.url
+                    model: histroyListModel
+                    delegate: MenuItem{
+                        action: Action {
+                            id: _histroy
+                            property string url: model.url
                             text: qsTr("")
                             onTriggered: {
                                 let urls=[url]
@@ -270,6 +272,7 @@ ApplicationWindow {
                 playlistModel.currentIndex = newIndex
             }
         }
+        clearHistory.onTriggered: histroyListModel.clearHistory()
         about.onTriggered: content.dialogs.about.open()
         zeroPointFiveRate.onTriggered: mediaEngine.setPlaybackRate(0.5)
         oneRate.onTriggered: mediaEngine.setPlaybackRate(1)
@@ -450,10 +453,6 @@ ApplicationWindow {
         id: dragHandler
         onFilesDropped: function (urls) {
             playlistModel.addMedias(urls)
-            // 如果当前没有播放，则播放第一个
-            if (playlistModel.rowCount > 0 && !mediaEngine.playing) {
-                playlistModel.currentIndex = 0
-            }
         }
 
         Component.onCompleted: setWindow(window)

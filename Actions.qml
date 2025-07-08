@@ -15,6 +15,7 @@ Item {
     property alias previous: _previous
     property alias next: _next
     property alias about: _about
+    property alias clearHistory: _clearHistory
     property alias zeroPointFiveRate: _zeroPointFiveRate
     property alias oneRate: _oneRate
     property alias onePointFiveRate: _onePointFiveRate
@@ -77,6 +78,12 @@ Item {
     Action {
         id: _close
         text: qsTr("&Close")
+        icon.name: "window-close"
+    }
+
+    Action {
+        id: _clearHistory
+        text: qsTr("Clear History")
         icon.name: "window-close"
     }
 

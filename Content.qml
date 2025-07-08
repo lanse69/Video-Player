@@ -105,19 +105,32 @@ Item {
         // 鼠标区域控制控制栏和列表显示
         HoverHandler {
             id:mouseHover
-            acceptedDevices: PointerDevice.Mouse
+            // acceptedDevices: PointerDevice.Mouse
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchScreen | PointerDevice.TouchPad
             target: parent
 
             onPointChanged: {
-                if(captureManager.playerLayout !== CaptureManager.NotVideo){
+                const pos = Qt.point(point.scenePosition.x, point.scenePosition.y)
+                if(captureManager.playerLayout !== CaptureManager.NotVideo){ // NotVideo布局中不允许展示列表
                     // 当鼠标靠近右侧时显示播放列表
-                    playlist.visible = (point.position.x > parent.width * (2/3)) && !searchList.visible && searchBox.length === 0 && (point.position.y <= parent.height - 70)
-                    searchBox.visible = (point.position.x > parent.width * (2/3)) && (point.position.y <= parent.height - 70)
-                    searchList.visible = (point.position.x > parent.width * (2/3)) && !playlist.visible && searchBox.length !== 0 && (point.position.y <= parent.height - 70)
-                    playlistcurtain.visible = (point.position.x > parent.width * (2/3)) && (point.position.y <= parent.height - 70)
+                    if((pos.x > parent.width - 30) && (pos.y <= parent.height - 70)){
+                        playlist.visible = !searchList.visible && searchBox.length === 0
+                        searchBox.visible = true
+                        searchList.visible = !playlist.visible && searchBox.length !== 0
+                        playlistcurtain.visible = true
+                    } else if((pos.x < parent.width * (2/3)) || (pos.y > parent.height - 70)){
+                        playlist.visible = false
+                        searchBox.visible = false
+                        searchList.visible = false
+                        playlistcurtain.visible = false
+                    }
                 }
                 // 当鼠标靠近底部时显示控制栏
-                controlBar.visible = (point.position.y > parent.height - 70)
+                if(pos.y > parent.height - 30){
+                    controlBar.visible = true
+                } else if(pos.y < parent.height - 70){
+                    controlBar.visible = false
+                }
             }
         }
     }

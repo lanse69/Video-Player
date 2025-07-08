@@ -44,8 +44,9 @@ chmod +x qt-unified-linux-x64-online.run
    - libavfilter
 
 ### 系统环境要求
-- **Linux 系统**（推荐 Manjaro/Arch X11桌面）
+- **Linux 系统**（推荐 Manjaro/Arch）
 
+支持X11桌面，wayland桌面屏幕捕获未支持
 ---
 
 ## 安装部署指南（Manjaro/Arch Linux）
@@ -66,6 +67,7 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
 
 # 如果提示版本过低，请自行参考前面下载Qt 6.9+的版本
 # 如果使用自定义安装的 Qt 6.9.1 (根据实际路径修改)
+# 运行命令后再次cmake
 export PATH="/opt/Qt/6.9.1/gcc_64/bin:$PATH"
 export LD_LIBRARY_PATH="/opt/Qt/6.9.1/gcc_64/lib:$LD_LIBRARY_PATH"
 # ```
@@ -78,7 +80,7 @@ make -j$(nproc)
 !!!请务必先前往项目根目录的scripts/video-player.sh文件中决定是否修改或者注释或者解除注释，再安装!!!
 
 ```bash
-# 如果是使用自己安装的Qt, 请先看后面的Attention
+# 如果是使用自己安装的Qt, 请先看后面的Attention!!!
 sudo make install
 ```
 
@@ -88,13 +90,13 @@ sudo update-desktop-database
 sudo gtk-update-icon-cache /usr/share/icons/hicolor
 ```
 ## Attention
+wayland桌面无法截全屏，录制屏幕，录制摄像头画面
+
 !!!关于：项目根目录的scripts/video-player.sh文件
 
 如果需要使用自己安装的Qt,请修改第二条命令且取消注释
 
 修改后进入build目录再次安装到系统!!!
-
-使用wayland桌面会导致控制栏与列表无法出现的问题
 
 NVIDIA 专有驱动与 FFmpeg 后端存在兼容性问题，遂可尝试使用GStreamer后端（可能会找不到一些库导致无法播放）, 所以更推荐切换到混显或者集显亦或者更换驱动
 ```bash

@@ -47,6 +47,7 @@ public:
     Q_INVOKABLE int getRandomIndex(int min, int max) const; // 生成随机下标
 
     Q_INVOKABLE QString generateFilePath() const;
+    Q_INVOKABLE void clearHistory();
 
     //暴露属性的setter和getter
     int currentIndex() const;

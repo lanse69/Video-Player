@@ -187,8 +187,8 @@ Item {
         visible: false
         height: 30
         placeholderText: "请输入搜索内容(限10字)"
-        placeholderTextColor: "white"
-        color: "white"
+        placeholderTextColor: "green"
+        color: "green"
         focus: true
 
         Keys.onPressed: function (event){

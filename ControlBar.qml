@@ -281,8 +281,8 @@ Rectangle {
                             "请输入弹幕内容(限100字)"
                         }
                     }
-                    color: "white"
-                    placeholderTextColor: "white"
+                    color: "green"
+                    placeholderTextColor: "green"
                     Keys.onPressed: function(event) {
                         if (!enabled) {
                             event.accepted = true;

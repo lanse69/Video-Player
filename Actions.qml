@@ -210,7 +210,6 @@ Item {
         id: _saveLocation
         text: qsTr("Save Location")
         icon.name: "folder-black"
-        shortcut: "Ctrl+L"
     }
 
     Action {
